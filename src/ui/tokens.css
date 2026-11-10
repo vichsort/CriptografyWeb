@@ -7,6 +7,18 @@
  * dark system without JavaScript. src/ui/tokens.test.ts keeps the two identical.
  */
 
+/* `dark:` follows the chosen theme, and the system setting when no theme was set (no JavaScript). */
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme]), :root:not([data-theme]) *) {
+      @slot;
+    }
+  }
+}
+
 @theme {
   /* Spacing: 4px steps (§2) plus the fixed layout sizes (§8). */
   --spacing-*: initial;

@@ -1,0 +1,14 @@
+/* Keyframes used by the primitives in src/ui. */
+
+@keyframes activity-spoke {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.15;
+  }
+}
+
+@utility animate-activity-spoke {
+  animation: activity-spoke 0.8s linear infinite;
+}

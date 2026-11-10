@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { Algorithm, Family } from '@/domain';
+import type { IconColorToken } from '@/ui';
+import type { IconColor } from './algorithms';
 import { joinCatalog } from './join';
 
 function algorithm(id: string, family: Family, extra: Partial<Algorithm> = {}): Algorithm {
@@ -101,5 +103,11 @@ describe('joinCatalog', () => {
       'caesar',
       'encoding-is-not-encryption',
     ]);
+  });
+});
+
+describe('IconColor', () => {
+  it('is the same union as the ui IconColorToken (ui may not import content)', () => {
+    expectTypeOf<IconColor>().toEqualTypeOf<IconColorToken>();
   });
 });

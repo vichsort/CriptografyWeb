@@ -6,8 +6,8 @@ import { algorithmContent, extras } from '@/content';
 
 const css = readFileSync(path.join(import.meta.dirname, 'tokens.css'), 'utf8');
 
-function block(after: string): string {
-  const start = css.indexOf(after);
+function block(after: string | RegExp): string {
+  const start = typeof after === 'string' ? css.indexOf(after) : css.search(after);
   if (start === -1) throw new Error(`missing ${after}`);
   let depth = 0;
   let i = css.indexOf('{', start);
@@ -29,7 +29,10 @@ const declarations = (body: string) =>
 describe('tokens.css', () => {
   it('uses the same dark tokens with and without JavaScript', () => {
     const explicit = declarations(block(":root[data-theme='dark']"));
-    const media = block('@media (prefers-color-scheme: dark)');
+    // The token block, not the dark: variant, which also has a prefers-color-scheme branch.
+    const media = block(
+      /@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-theme\]\) \{/,
+    );
     const noScript = declarations(media.slice(media.indexOf('{') + 1, media.lastIndexOf('}')));
     expect(explicit.length).toBeGreaterThan(10);
     expect(noScript).toEqual(explicit);
@@ -42,5 +45,9 @@ describe('tokens.css', () => {
       'neutral',
     ]);
     for (const color of colors) expect(css).toContain(`--color-icon-${color}:`);
+  });
+
+  it('makes dark: follow the chosen theme, not only the system setting', () => {
+    expect(css).toMatch(/@custom-variant dark \{[\s\S]*?\[data-theme='dark'\]/);
   });
 });

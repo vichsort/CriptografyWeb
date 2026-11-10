@@ -6,7 +6,7 @@ beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 
 afterEach(() => {
   server.resetHandlers();
-  if (typeof localStorage !== 'undefined') localStorage.clear();
+  if (typeof globalThis.localStorage?.clear === 'function') localStorage.clear();
 });
 
 afterAll(() => server.close());

@@ -8,7 +8,7 @@ import {
   type Algorithm,
   type OperationRequest,
 } from '@/domain';
-import { CatalogDto, ResultDto, StatusDto, type AlgorithmDto } from './schemas';
+import { AlgorithmDto, CatalogDto, ResultDto, StatusDto } from './schemas';
 
 /** Exact text of ../Criptografy/app/Cryptography/NonTextResultException.php. */
 export const NON_TEXT_RESULT_MESSAGE =
@@ -37,7 +37,13 @@ function toAlgorithm(dto: AlgorithmDto): Algorithm {
 
 export async function getCatalog(signal?: AbortSignal): Promise<Algorithm[]> {
   const body = await request({ method: 'GET', path: '/api/algorithms', ...(signal && { signal }) });
-  return parse(CatalogDto, body).data.map(toAlgorithm);
+  const entries = parse(CatalogDto, body).data.map((entry) => AlgorithmDto.safeParse(entry));
+  const valid = entries.flatMap((r) => (r.success ? [toAlgorithm(r.data)] : []));
+  const firstFailure = entries.find((r) => !r.success);
+  if (valid.length === 0 && firstFailure && !firstFailure.success) {
+    throw new AppFailure({ kind: 'contract', issues: firstFailure.error.message });
+  }
+  return valid;
 }
 
 /**

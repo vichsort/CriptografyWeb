@@ -45,6 +45,17 @@ describe('catalog persister', () => {
     await vi.waitFor(() => expect(localStorage.getItem(PERSIST_CACHE_KEY)).toBeNull());
   });
 
+  it.each(['null', '42', '"text"', '{"buster":1}', '[]'])(
+    'ignores a persisted value that is not a client: %s',
+    async (raw) => {
+      localStorage.setItem(PERSIST_CACHE_KEY, raw);
+      const client = createQueryClient();
+      const persister = createCatalogPersister(createStorage(localStorage));
+      await persistQueryClientRestore({ queryClient: client, ...persistOptions(persister) });
+      expect(client.getQueryData(['catalog'])).toBeUndefined();
+    },
+  );
+
   it('ignores a corrupted persisted cache', async () => {
     localStorage.setItem(PERSIST_CACHE_KEY, '{broken');
     const client = createQueryClient();

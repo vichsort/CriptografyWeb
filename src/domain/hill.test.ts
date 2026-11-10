@@ -80,6 +80,23 @@ describe('hillKeyFeedback', () => {
   });
 });
 
+describe('hillKeyFeedback with a malformed matrix', () => {
+  it.each([
+    ['empty', []],
+    ['1x1', [[3]]],
+    [
+      'non-square',
+      [
+        [1, 0, 5],
+        [0, 1, 7],
+      ],
+    ],
+    ['ragged', [[1, 2], [3]]],
+  ])('never reports a %s matrix as invertible', (_, m) => {
+    expect(hillKeyFeedback(m).invertible).toBe(false);
+  });
+});
+
 describe('determinant', () => {
   it('expands a 6x6 matrix', () => {
     const identity = Array.from({ length: 6 }, (_, i) =>

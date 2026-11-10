@@ -23,18 +23,35 @@ const noopStore: KeyValueStore = {
   removeItem: () => {},
 };
 
+function memoryStore(): KeyValueStore {
+  const data = new Map<string, string>();
+  return {
+    getItem: (k) => data.get(k) ?? null,
+    setItem: (k, v) => void data.set(k, v),
+    removeItem: (k) => void data.delete(k),
+  };
+}
+
 function browserStore(): KeyValueStore | null {
+  if (typeof window === 'undefined') return null;
   try {
-    return typeof window === 'undefined' ? null : window.localStorage;
+    return window.localStorage;
   } catch {
-    // Reading window.localStorage itself throws when storage is blocked.
-    return null;
+    // Reading window.localStorage itself throws when site data is blocked. Keep this tab working.
+    return memoryStore();
   }
 }
 
+/**
+ * Never throws. A value the backend refuses to store (private mode, quota) is kept in memory, so
+ * toggles still work for the rest of the session.
+ */
 function safe(backend: KeyValueStore): KeyValueStore {
+  const unsaved = new Map<string, string>();
   return {
     getItem(k) {
+      const pending = unsaved.get(k);
+      if (pending !== undefined) return pending;
       try {
         return backend.getItem(k);
       } catch {
@@ -44,15 +61,17 @@ function safe(backend: KeyValueStore): KeyValueStore {
     setItem(k, v) {
       try {
         backend.setItem(k, v);
+        unsaved.delete(k);
       } catch {
-        // Private mode or quota exceeded: preferences are a convenience, not a requirement.
+        unsaved.set(k, v);
       }
     },
     removeItem(k) {
+      unsaved.delete(k);
       try {
         backend.removeItem(k);
       } catch {
-        // Same as setItem.
+        // Nothing stored, nothing to remove.
       }
     },
   };

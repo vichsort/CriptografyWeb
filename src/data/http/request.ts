@@ -1,6 +1,7 @@
 import { getConfig } from '@/config/env';
 import { AppFailure } from '@/domain';
 import { normalizeHttpError } from './normalize';
+import { anySignal } from './signals';
 
 export interface RequestOptions {
   method: 'GET' | 'POST';
@@ -37,8 +38,10 @@ function fail(error: ConstructorParameters<typeof AppFailure>[0]): never {
  * pure network failure is retried once.
  */
 export async function request(opts: RequestOptions): Promise<unknown> {
+  // A missing API URL is a deploy mistake, not a network failure: let it fail loudly.
+  const url = `${getConfig().apiUrl}${opts.path}`;
   const timeout = new AbortController();
-  const signal = opts.signal ? AbortSignal.any([opts.signal, timeout.signal]) : timeout.signal;
+  const signal = opts.signal ? anySignal([opts.signal, timeout.signal]) : timeout.signal;
   const timer = setTimeout(() => timeout.abort(), opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
   const waking = opts.onWaking
     ? setTimeout(opts.onWaking, opts.wakingAfterMs ?? DEFAULT_WAKING_AFTER_MS)
@@ -56,7 +59,7 @@ export async function request(opts: RequestOptions): Promise<unknown> {
   if (opts.body !== undefined) init.body = JSON.stringify(opts.body);
 
   try {
-    const response = await send(`${getConfig().apiUrl}${opts.path}`, init, signal);
+    const response = await send(url, init, signal);
     const parsed = parseJson(await response.text());
     if (!response.ok) {
       fail(normalizeHttpError(response.status, parsed.ok ? parsed.value : null, response.headers));

@@ -47,6 +47,11 @@ export function hillKeyFeedback(m: Matrix): {
   gcdWith26: number;
   invertible: boolean;
 } {
+  const size = m.length;
+  if (size < 2 || m.some((row) => row.length !== size)) {
+    // Not a Hill key: the backend only accepts square matrices from 2x2 up.
+    return { determinant: 0, residue: 0, gcdWith26: MODULUS, invertible: false };
+  }
   const residue = residueOf(m);
   const gcdWith26 = gcd(residue, MODULUS);
   return { determinant: determinant(m), residue, gcdWith26, invertible: gcdWith26 === 1 };

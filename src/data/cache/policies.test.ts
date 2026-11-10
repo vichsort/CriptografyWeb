@@ -19,7 +19,9 @@ describe('policies.catalog.retry', () => {
     { kind: 'contract', issues: 'x' },
     { kind: 'aborted' },
     { kind: 'notFound', message: 'x' },
-  ])('never retries $kind', (error) => {
+    { kind: 'server', status: 405, message: null },
+    { kind: 'server', status: 403, message: null },
+  ])('never retries $kind $status', (error) => {
     expect(policies.catalog.retry(0, failure(error))).toBe(false);
   });
 

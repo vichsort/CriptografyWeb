@@ -24,7 +24,9 @@ export const AlgorithmDto = z.object({
 });
 export type AlgorithmDto = z.infer<typeof AlgorithmDto>;
 
-export const CatalogDto = z.object({ data: z.array(AlgorithmDto) });
+// Entries are validated one by one, so one algorithm with a shape this version does not know is
+// skipped instead of taking the whole catalog down.
+export const CatalogDto = z.object({ data: z.array(z.unknown()) });
 
 export const ResultDto = z.object({ result: z.string() });
 

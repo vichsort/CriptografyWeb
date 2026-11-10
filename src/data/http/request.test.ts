@@ -162,6 +162,54 @@ describe('request', () => {
   });
 });
 
+describe('request edge cases', () => {
+  it('surfaces a missing API URL as a configuration error', async () => {
+    vi.stubEnv('NEXT_PUBLIC_API_URL', undefined);
+    vi.resetModules();
+    try {
+      const fresh = await import('./request');
+      await expect(fresh.request({ method: 'GET', path: '/api/algorithms' })).rejects.toThrow(
+        /NEXT_PUBLIC_API_URL/,
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('works where AbortSignal.any is missing', async () => {
+    const original = AbortSignal.any;
+    Object.defineProperty(AbortSignal, 'any', { value: undefined, configurable: true });
+    try {
+      server.use(
+        http.get(apiUrl('/api/algorithms'), async () => {
+          await delay('infinite');
+          return HttpResponse.json({});
+        }),
+      );
+      const controller = new AbortController();
+      const pending = request({
+        method: 'GET',
+        path: '/api/algorithms',
+        signal: controller.signal,
+      });
+      setTimeout(() => controller.abort(), 20);
+      expect(await failureOf(pending)).toEqual({ kind: 'aborted' });
+      expect(
+        await failureOf(
+          request({
+            method: 'GET',
+            path: '/api/algorithms',
+            signal: new AbortController().signal,
+            timeoutMs: 30,
+          }),
+        ),
+      ).toEqual({ kind: 'timeout' });
+    } finally {
+      Object.defineProperty(AbortSignal, 'any', { value: original, configurable: true });
+    }
+  });
+});
+
 describe('pingApi', () => {
   it('sends GET / and swallows failures', async () => {
     let calls = 0;

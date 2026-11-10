@@ -29,6 +29,27 @@ describe('getCatalog', () => {
     expect(byId['aes-256-gcm']?.securityLevel).toBe('modern');
   });
 
+  it('skips an algorithm with an unknown category or security level', async () => {
+    const [first] = catalog.data;
+    const extended = {
+      data: [
+        ...catalog.data,
+        { ...first, id: 'signature', category: 'signing' },
+        { ...first, id: 'legacy', securityLevel: 'legacy' },
+      ],
+    };
+    server.use(http.get(apiUrl('/api/algorithms'), () => HttpResponse.json(extended)));
+    const ids = (await getCatalog()).map((a) => a.id);
+    expect(ids).toHaveLength(8);
+    expect(ids).not.toContain('signature');
+    expect(ids).not.toContain('legacy');
+  });
+
+  it('throws contract when the envelope is not a catalog', async () => {
+    server.use(http.get(apiUrl('/api/algorithms'), () => HttpResponse.json({ items: [] })));
+    expect((await failureOf(getCatalog())).kind).toBe('contract');
+  });
+
   it('throws contract when a field is missing', async () => {
     const broken = {
       data: catalog.data.map((entry) => {

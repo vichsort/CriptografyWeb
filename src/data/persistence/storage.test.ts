@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { createStorage, STORAGE_PREFIX, type KeyValueStore } from './storage';
 
@@ -83,6 +83,27 @@ describe('createStorage', () => {
     storage.write('theme', 'dark');
     expect(storage.read('theme', Theme, 'system')).toBe('system');
     expect(storage.kv.getItem('cw:v1:theme')).toBeNull();
+  });
+
+  it('keeps written values in memory when the backend throws', () => {
+    const storage = createStorage(throwing);
+    storage.write('theme', 'dark');
+    expect(storage.read('theme', Theme, 'system')).toBe('dark');
+    storage.remove('theme');
+    expect(storage.read('theme', Theme, 'system')).toBe('system');
+  });
+
+  it('keeps values in memory when window.localStorage is blocked', () => {
+    const spy = vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
+      throw new Error('SecurityError');
+    });
+    try {
+      const storage = createStorage();
+      storage.write('theme', 'dark');
+      expect(storage.read('theme', Theme, 'system')).toBe('dark');
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it('uses window.localStorage by default', () => {

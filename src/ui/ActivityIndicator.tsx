@@ -10,15 +10,20 @@ const SPOKES = Array.from({ length: 8 }, (_, i) => i);
 interface ActivityIndicatorProps {
   size?: 'sm' | 'md';
   label?: string;
+  /** Hidden from assistive tech, when its container already says it is busy (a loading button). */
+  decorative?: boolean;
 }
 
 /** The iOS activity indicator: eight spokes fading in turn. The only spinner in the app. */
-export function ActivityIndicator({ size = 'md', label = 'Loading' }: ActivityIndicatorProps) {
+export function ActivityIndicator({
+  size = 'md',
+  label = 'Loading',
+  decorative = false,
+}: ActivityIndicatorProps) {
   const { box, spokeWidth, spokeHeight } = SIZES[size];
   return (
     <span
-      role="progressbar"
-      aria-label={label}
+      {...(decorative ? { 'aria-hidden': true } : { role: 'progressbar', 'aria-label': label })}
       className="relative inline-block shrink-0"
       style={{ width: box, height: box }}
     >

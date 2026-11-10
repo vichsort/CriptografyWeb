@@ -96,6 +96,28 @@ describe('MatrixEditor', () => {
     expect(cell(1, 1)).toHaveFocus();
   });
 
+  it('left and right move the caret inside a cell, and leave it only at the edge', async () => {
+    render(
+      <Editor
+        initial={[
+          [123, 2],
+          [3, 4],
+        ]}
+      />,
+    );
+    const first = cell(1, 1) as HTMLInputElement;
+    first.focus();
+    first.setSelectionRange(2, 2);
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(first).toHaveFocus();
+    expect(first.selectionStart).toBe(1);
+    await userEvent.keyboard('{ArrowRight}');
+    expect(first).toHaveFocus();
+    first.setSelectionRange(3, 3);
+    await userEvent.keyboard('{ArrowRight}');
+    expect(cell(1, 2)).toHaveFocus();
+  });
+
   it('commits whole numbers and lets "-" stand while typing', async () => {
     const onChange = vi.fn();
     render(
@@ -126,5 +148,25 @@ describe('MatrixEditor', () => {
       />,
     );
     expect(screen.getByText('det(K) = 1')).toHaveAttribute('aria-live', 'polite');
+  });
+
+  it('keeps the live region mounted, so the first feedback is announced', () => {
+    const props = {
+      label: 'Key matrix',
+      value: [
+        [1, 0],
+        [0, 1],
+      ],
+      min: 2,
+      max: 6,
+      onChange: () => {},
+    };
+    const { container, rerender } = render(<MatrixEditor {...props} feedback={null} />);
+    const region = container.querySelector('[aria-live="polite"]');
+    expect(region).not.toBeNull();
+    expect(region).toBeEmptyDOMElement();
+    rerender(<MatrixEditor {...props} feedback={{ text: 'det(K) = 0', ok: false }} />);
+    expect(container.querySelector('[aria-live="polite"]')).toBe(region);
+    expect(region).toHaveTextContent('det(K) = 0');
   });
 });

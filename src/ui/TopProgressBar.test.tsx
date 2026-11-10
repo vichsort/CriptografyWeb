@@ -63,6 +63,18 @@ describe('TopProgressBar', () => {
     expect(bar(container)).toBeNull();
   });
 
+  it('a request starting while the bar fades draws a new bar from the bottom', () => {
+    const { container, rerender } = render(<TopProgressBar active />);
+    act(() => vi.advanceTimersByTime(500));
+    rerender(<TopProgressBar active={false} />);
+    const fading = bar(container);
+    rerender(<TopProgressBar active />);
+    const fresh = bar(container);
+    expect(fresh).not.toBe(fading);
+    expect(fresh).toHaveClass('opacity-100');
+    expect(fresh?.style.transform).toBe('scaleX(0)');
+  });
+
   it('under reduced motion renders a static bar while active', () => {
     reduced.value = true;
     const { container } = render(<TopProgressBar active />);

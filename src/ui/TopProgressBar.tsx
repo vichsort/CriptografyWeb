@@ -51,6 +51,7 @@ export function TopProgressBar({ active }: { active: boolean }) {
     >
       {isProgressVisible(state) && (
         <div
+          key={state.run}
           data-progress-bar=""
           className={cn(
             'h-full origin-left bg-tint starting:opacity-0',

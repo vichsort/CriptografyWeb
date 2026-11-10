@@ -92,6 +92,11 @@ export function MatrixEditor({
   const move = (event: KeyboardEvent<HTMLInputElement>, r: number, c: number) => {
     const delta = MOVES[event.key];
     if (!delta) return;
+    // Left and right edit the number until the caret reaches its edge (a full selection counts).
+    const input = event.currentTarget;
+    const { selectionStart, selectionEnd, value: text } = input;
+    if (event.key === 'ArrowLeft' && selectionStart !== 0) return;
+    if (event.key === 'ArrowRight' && selectionEnd !== text.length) return;
     const target = cells.current.get(`${r + delta[0]}-${c + delta[1]}`);
     if (!target) return;
     event.preventDefault();
@@ -165,17 +170,17 @@ export function MatrixEditor({
           )}
         </AnimatePresence>
       </div>
-      {feedback && (
-        <p
-          aria-live="polite"
-          className={cn(
-            'mt-2 font-mono text-mono-small transition-colors duration-fast',
-            feedback.ok ? 'text-success' : 'text-danger',
-          )}
-        >
-          {feedback.text}
-        </p>
-      )}
+      {/* Always mounted: a live region inserted together with its text is often not announced. */}
+      <p
+        aria-live="polite"
+        className={cn(
+          'font-mono text-mono-small transition-colors duration-fast',
+          feedback && 'mt-2',
+          feedback?.ok ? 'text-success' : 'text-danger',
+        )}
+      >
+        {feedback?.text}
+      </p>
     </fieldset>
   );
 }

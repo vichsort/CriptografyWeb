@@ -46,4 +46,18 @@ describe('SegmentedControl', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Decrypt' }));
     expect(screen.getByRole('radio', { name: 'Decrypt' })).toHaveAttribute('aria-checked', 'true');
   });
+
+  it('stays reachable by Tab when the value matches no option', () => {
+    render(
+      <SegmentedControl
+        options={options}
+        value={'hash' as 'encrypt'}
+        onChange={() => {}}
+        ariaLabel="Mode"
+      />,
+    );
+    const [first, second] = screen.getAllByRole('radio');
+    expect(first).toHaveAttribute('tabindex', '0');
+    expect(second).toHaveAttribute('tabindex', '-1');
+  });
 });

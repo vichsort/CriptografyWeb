@@ -78,18 +78,23 @@ describe('progressStep', () => {
     s = progressStep(s, tick(500));
     expect(s).toMatchObject({ phase: 'completing', value: 1 });
     s = progressStep(s, { type: 'faded' });
-    expect(s).toEqual(initialProgress);
+    expect(s).toMatchObject({ phase: 'idle', value: 0 });
   });
 
-  it('start during completing restarts from running without going backwards visually', () => {
-    let s = progressStep(running(), { type: 'stop' });
+  it('start during completing restarts cleanly as a new run, from the bottom', () => {
+    const before = running();
+    let s = progressStep(before, { type: 'stop' });
     s = progressStep(s, { type: 'start' });
-    expect(s).toMatchObject({ phase: 'running', value: 1 });
+    expect(s).toMatchObject({ phase: 'running', value: 0 });
+    // A new run: the bar is drawn afresh (fading in) rather than sweeping back from full.
+    expect(s.run).toBe(before.run + 1);
     s = run(s, 30);
-    expect(s.value).toBe(1);
+    expect(s.value).toBeGreaterThan(0);
+    expect(s.value).toBeLessThan(PROGRESS_CEILING);
     s = progressStep(s, { type: 'stop' });
+    expect(s).toMatchObject({ phase: 'completing', value: 1 });
     s = progressStep(s, { type: 'faded' });
-    expect(s).toEqual(initialProgress);
+    expect(s).toMatchObject({ phase: 'idle', value: 0 });
     s = progressStep(s, { type: 'start' });
     expect(s).toMatchObject({ phase: 'waiting', value: 0 });
   });

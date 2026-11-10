@@ -1,25 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Button } from './Button';
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
-
-function mockWidth(width: number) {
-  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
-    width,
-    height: 44,
-    top: 0,
-    left: 0,
-    right: width,
-    bottom: 44,
-    x: 0,
-    y: 0,
-    toJSON: () => ({}),
-  });
-}
 
 describe('Button', () => {
   it('renders its label and calls onClick', async () => {
@@ -34,24 +16,30 @@ describe('Button', () => {
     expect(screen.getByRole('button')).toHaveAttribute('type', 'button');
   });
 
-  it('loading keeps width: min-width is locked to the width measured at rest', () => {
-    mockWidth(148);
-    const { rerender } = render(<Button>Encrypt</Button>);
-    expect(screen.getByRole('button').style.minWidth).toBe('');
+  it('loading keeps width: a button that can load reserves its loading layout at rest', () => {
+    // Layout is not measurable in jsdom; this checks the structure that keeps the width (one grid
+    // cell holding both layouts). Chrome measurements are in the ledger.
+    const { rerender } = render(
+      <Button loading={false} loadingLabel="Encrypting…">
+        Encrypt
+      </Button>,
+    );
+    const reserve = screen.getByRole('button').querySelector('[data-reserve]');
+    expect(reserve).toHaveAttribute('aria-hidden', 'true');
+    expect(reserve).toHaveClass('invisible');
+    expect(reserve).toHaveTextContent('Encrypting…');
+    expect(reserve?.querySelector('[data-indicator-slot]')).not.toBeNull();
     rerender(
       <Button loading loadingLabel="Encrypting…">
         Encrypt
       </Button>,
     );
-    expect(screen.getByRole('button').style.minWidth).toBe('148px');
+    expect(screen.getByRole('button').querySelector('[data-reserve]')).not.toBeNull();
   });
 
-  it('releases the locked width when loading ends', () => {
-    mockWidth(148);
-    const { rerender } = render(<Button>Encrypt</Button>);
-    rerender(<Button loading>Encrypt</Button>);
-    rerender(<Button>Encrypt</Button>);
-    expect(screen.getByRole('button').style.minWidth).toBe('');
+  it('reserves nothing on a button that never loads', () => {
+    render(<Button>Copy</Button>);
+    expect(screen.getByRole('button').querySelector('[data-reserve]')).toBeNull();
   });
 
   it('loading shows the gerund and the ActivityIndicator, sets aria-busy, and blocks clicks', async () => {
@@ -61,10 +49,14 @@ describe('Button', () => {
         Encrypt
       </Button>,
     );
-    const button = screen.getByRole('button');
+    // The indicator is decorative inside the button: its name is the gerund alone.
+    const button = screen.getByRole('button', { name: 'Encrypting…' });
     expect(button).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByText('Encrypting…')).toBeInTheDocument();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(button.querySelectorAll('[data-indicator-slot] [data-spoke]')).toHaveLength(0);
+    expect(
+      button.querySelectorAll(':scope > span > :not([data-reserve]) [data-spoke]'),
+    ).toHaveLength(8);
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     await userEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
   });
@@ -92,7 +84,7 @@ describe('Button', () => {
 
   it('has no indicator and no aria-busy at rest', () => {
     render(<Button>Encrypt</Button>);
-    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.getByRole('button').querySelector('[data-spoke]')).toBeNull();
     expect(screen.getByRole('button')).not.toHaveAttribute('aria-busy');
   });
 });

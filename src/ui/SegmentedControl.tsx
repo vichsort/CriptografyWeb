@@ -25,15 +25,15 @@ export function SegmentedControl<T extends string>({
   const reduced = useReducedMotionSafe();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  const selected = options.findIndex((o) => o.value === value);
+  // With no match, the first segment takes the tab stop so the group stays reachable.
+  const tabStop = Math.max(0, selected);
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const by = NEXT[event.key];
     if (by === undefined || options.length === 0) return;
     event.preventDefault();
-    const current = Math.max(
-      0,
-      options.findIndex((o) => o.value === value),
-    );
-    const next = (current + by + options.length) % options.length;
+    const next = (tabStop + by + options.length) % options.length;
     const option = options[next];
     if (!option) return;
     onChange(option.value);
@@ -58,7 +58,7 @@ export function SegmentedControl<T extends string>({
             type="button"
             role="radio"
             aria-checked={checked}
-            tabIndex={checked ? 0 : -1}
+            tabIndex={i === tabStop ? 0 : -1}
             onClick={() => onChange(option.value)}
             className={cn(
               'relative cursor-pointer rounded-sm px-[22px] py-[7px] text-footnote font-medium whitespace-nowrap text-label',

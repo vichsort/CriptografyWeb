@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useId,
   useLayoutEffect,
   useRef,
@@ -54,6 +55,24 @@ export function TextArea({
   }, []);
 
   useLayoutEffect(grow, [grow, value]);
+
+  // Lines rewrap when the width changes (resize, rotation) or the web font arrives.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let cancelled = false;
+    void document.fonts?.ready.then(() => {
+      if (!cancelled) grow();
+    });
+    if (typeof ResizeObserver === 'undefined') return () => void (cancelled = true);
+    // Growing sets the same height again, so the observer settles after one call.
+    const observer = new ResizeObserver(() => grow());
+    observer.observe(el);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [grow]);
 
   const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     if (value === undefined) setUncontrolledLength(characterCount(event.target.value));

@@ -15,17 +15,19 @@ export type ProgressState = {
   value: number;
   /** Time spent waiting before the bar shows. */
   waitedMs: number;
+  /** Counts the times the bar has appeared; a new run draws a new bar instead of reusing one. */
+  run: number;
 };
 
 export type ProgressEvent =
   { type: 'start' } | { type: 'stop' } | { type: 'tick'; dtMs: number } | { type: 'faded' };
 
-export const initialProgress: ProgressState = { phase: 'idle', value: 0, waitedMs: 0 };
+export const initialProgress: ProgressState = { phase: 'idle', value: 0, waitedMs: 0, run: 0 };
 
 /**
  * Each step closes a fraction of the gap to the ceiling, so it moves fast at first and slows down.
  * The fraction depends on the elapsed time, so one long frame equals several short ones. It never
- * moves backwards: a bar restarted while full stays full.
+ * moves backwards within a run.
  */
 function trickle(value: number, dtMs: number): number {
   const k = 1 - Math.exp(-Math.max(0, dtMs) / TRICKLE_TAU_MS);
@@ -36,16 +38,16 @@ function trickle(value: number, dtMs: number): number {
 export function progressStep(s: ProgressState, e: ProgressEvent): ProgressState {
   switch (s.phase) {
     case 'idle':
-      return e.type === 'start' ? { phase: 'waiting', value: 0, waitedMs: 0 } : s;
+      return e.type === 'start' ? { ...s, phase: 'waiting', value: 0, waitedMs: 0 } : s;
 
     case 'waiting':
-      if (e.type === 'stop') return initialProgress;
+      if (e.type === 'stop') return { ...initialProgress, run: s.run };
       if (e.type !== 'tick') return s;
       {
         const waitedMs = s.waitedMs + e.dtMs;
         if (waitedMs < PROGRESS_SHOW_DELAY_MS) return { ...s, waitedMs };
         const value = trickle(0, waitedMs - PROGRESS_SHOW_DELAY_MS);
-        return { phase: 'running', value, waitedMs: PROGRESS_SHOW_DELAY_MS };
+        return { phase: 'running', value, waitedMs: PROGRESS_SHOW_DELAY_MS, run: s.run + 1 };
       }
 
     case 'running':
@@ -54,8 +56,9 @@ export function progressStep(s: ProgressState, e: ProgressEvent): ProgressState 
       return s;
 
     case 'completing':
-      if (e.type === 'start') return { ...s, phase: 'running' };
-      if (e.type === 'faded') return initialProgress;
+      // A request that starts while the bar fades restarts it cleanly: a new bar, from the bottom.
+      if (e.type === 'start') return { ...s, phase: 'running', value: 0, run: s.run + 1 };
+      if (e.type === 'faded') return { ...initialProgress, run: s.run };
       return s;
   }
 }

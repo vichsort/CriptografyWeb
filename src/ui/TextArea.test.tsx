@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TextArea } from './TextArea';
 
 function Controlled({ initial = '' }: { initial?: string }) {
@@ -41,5 +41,30 @@ describe('TextArea', () => {
     Object.defineProperty(area, 'scrollHeight', { configurable: true, get: () => 180 });
     await userEvent.type(area, 'x');
     expect(area.style.height).toBe('180px');
+  });
+
+  describe('when its width changes', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('recomputes its height, so rewrapped lines are not clipped', () => {
+      let notify: () => void = () => {};
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(callback: () => void) {
+            notify = callback;
+          }
+          observe() {}
+          disconnect() {}
+        },
+      );
+      render(<Controlled initial={'a long line of ciphertext'} />);
+      const area = screen.getByLabelText<HTMLTextAreaElement>('Text');
+      Object.defineProperty(area, 'scrollHeight', { configurable: true, get: () => 240 });
+      notify();
+      expect(area.style.height).toBe('240px');
+    });
   });
 });

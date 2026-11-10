@@ -199,7 +199,6 @@ Keys and inputs are never stored.
 - Icon tile (glyph and color token) and search synonyms ("password" → AES-256-GCM, "fingerprint" → SHA).
 - Optional overrides for the description and for each option's label and help. When there is no override, the schema `title` and `description` are used.
 - Which options are secret (rendered masked, for example the AES key).
-- Whether the algorithm is deterministic.
 - Per-algorithm notes (for example: Hill normalizes text, AES output changes on every run).
 
 Join rules with the catalog:

@@ -1,0 +1,174 @@
+{
+  "data": [
+    {
+      "id": "caesar",
+      "name": "Caesar",
+      "category": "encryption",
+      "description": "Substitution cipher that shifts the alphabet by a fixed amount, based on modular arithmetic (C = (P + shift) mod 26).",
+      "supportsEncryption": true,
+      "supportsDecryption": true,
+      "supportsHashing": false,
+      "requiresKey": true,
+      "securityLevel": "educational",
+      "options": {
+        "type": "object",
+        "properties": {
+          "shift": {
+            "type": "integer",
+            "title": "Shift",
+            "description": "Number of positions each letter is shifted. Any integer is accepted; only its value mod 26 matters."
+          }
+        },
+        "required": ["shift"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "vigenere",
+      "name": "Vigen\u00e8re",
+      "category": "encryption",
+      "description": "Polyalphabetic cipher: modular sum of the text and a repeating key (C = (P + K) mod 26).",
+      "supportsEncryption": true,
+      "supportsDecryption": true,
+      "supportsHashing": false,
+      "requiresKey": true,
+      "securityLevel": "educational",
+      "options": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Keyword made only of letters (A-Z, case-insensitive), repeated along the text.",
+            "pattern": "^[A-Za-z]+$"
+          }
+        },
+        "required": ["key"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "hill",
+      "name": "Hill",
+      "category": "encryption",
+      "description": "Polygraphic cipher based on linear algebra: each block of letters is transformed by a key matrix in modular arithmetic (C = K x P mod 26). Operates only on letters (A-Z), normalized to uppercase.",
+      "supportsEncryption": true,
+      "supportsDecryption": true,
+      "supportsHashing": false,
+      "requiresKey": true,
+      "securityLevel": "educational",
+      "options": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "array",
+            "title": "Key matrix",
+            "description": "Square matrix of integers, from 2x2 to 6x6, whose determinant is coprime with 26 (e.g. [[3, 3], [2, 5]]).",
+            "minItems": 2,
+            "maxItems": 6,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 6,
+              "items": { "type": "integer" }
+            }
+          }
+        },
+        "required": ["key"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "aes-256-gcm",
+      "name": "AES-256-GCM",
+      "category": "encryption",
+      "description": "Modern authenticated encryption using the OpenSSL primitive (not reimplemented by hand). Combines confidentiality (AES-256) and integrity (GCM tag) in a single operation.",
+      "supportsEncryption": true,
+      "supportsDecryption": true,
+      "supportsHashing": false,
+      "requiresKey": true,
+      "securityLevel": "modern",
+      "options": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Any non-empty string. It is turned into a 256-bit key with SHA-256, a deliberate simplification: real systems should use a proper KDF.",
+            "minLength": 1
+          }
+        },
+        "required": ["key"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "sha-256",
+      "name": "SHA-256",
+      "category": "hashing",
+      "description": "One-way cryptographic hash function (256 bits), using the native and trusted PHP implementation.",
+      "supportsEncryption": false,
+      "supportsDecryption": false,
+      "supportsHashing": true,
+      "requiresKey": false,
+      "securityLevel": "modern",
+      "options": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "sha-512",
+      "name": "SHA-512",
+      "category": "hashing",
+      "description": "One-way cryptographic hash function (512 bits), using the native and trusted PHP implementation.",
+      "supportsEncryption": false,
+      "supportsDecryption": false,
+      "supportsHashing": true,
+      "requiresKey": false,
+      "securityLevel": "modern",
+      "options": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "base64",
+      "name": "Base64",
+      "category": "encoding",
+      "description": "Reversible transformation from binary data to ASCII text. It is not a security mechanism.",
+      "supportsEncryption": false,
+      "supportsDecryption": false,
+      "supportsHashing": false,
+      "requiresKey": false,
+      "securityLevel": "not-applicable",
+      "options": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "hex",
+      "name": "Hexadecimal",
+      "category": "encoding",
+      "description": "Reversible transformation from binary data to base-16 text. It is not a security mechanism.",
+      "supportsEncryption": false,
+      "supportsDecryption": false,
+      "supportsHashing": false,
+      "requiresKey": false,
+      "securityLevel": "not-applicable",
+      "options": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

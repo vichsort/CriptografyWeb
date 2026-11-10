@@ -10,6 +10,7 @@ Current state: a bare `create-next-app` scaffold (App Router, TypeScript, Tailwi
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Layers, requests, caching, persistence, routes, API coverage, quality bar |
 | [docs/DESIGN.md](docs/DESIGN.md) | Design tokens, typography, components, motion, theming, iOS details, accessibility |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Phases to v1, what each one ships, known risks, done criteria |
 
 ```bash
 npm install

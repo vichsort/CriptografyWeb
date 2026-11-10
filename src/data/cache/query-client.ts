@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { isAppFailure, type AppError } from '@/domain';
+import { PERSIST_MAX_AGE } from './persister';
 
 const CATALOG_RETRIES = 5;
 // Transient failures only. A 4xx mapped to `server` (403, 405, ...) is a client bug: retrying it
@@ -15,11 +16,10 @@ function isTransient(error: AppError): boolean {
 export const policies = {
   catalog: {
     staleTime: 3_600_000,
-    // At least the persister's maxAge, so a restored catalog is not collected right away.
-    gcTime: 604_800_000,
+    // As long as the persister keeps it, so a restored catalog is not collected right away.
+    gcTime: PERSIST_MAX_AGE,
     retry: (count: number, err: unknown): boolean =>
       count < CATALOG_RETRIES && isAppFailure(err) && isTransient(err.error),
-    retryDelay: (attempt: number): number => Math.min(1000 * 2 ** attempt, 30_000),
   },
   operation: {
     staleTime: Infinity,

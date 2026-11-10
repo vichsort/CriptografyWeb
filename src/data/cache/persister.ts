@@ -26,9 +26,37 @@ function deserialize(raw: string): PersistedClient {
   }
 }
 
-/** Persists the query cache to localStorage through the persistence adapter. */
+/**
+ * Persists the query cache to localStorage through the persistence adapter. Every cache event
+ * asks for a save, but only the catalog is kept, so a save that would write the same catalog
+ * again (after an operation run, say) is skipped.
+ */
 export function createCatalogPersister(storage: Storage = createStorage()): Persister {
-  return createAsyncStoragePersister({ storage: storage.kv, key: PERSIST_CACHE_KEY, deserialize });
+  const inner = createAsyncStoragePersister({
+    storage: storage.kv,
+    key: PERSIST_CACHE_KEY,
+    deserialize,
+  });
+  let lastSaved: string | null = null;
+  return {
+    persistClient(client) {
+      // dehydratedAt changes on every save, so it is left out of the comparison.
+      const queries = client.clientState.queries.map((query) => {
+        const copy: Partial<typeof query> = { ...query };
+        delete copy.dehydratedAt;
+        return copy;
+      });
+      const snapshot = JSON.stringify([client.buster, queries, client.clientState.mutations]);
+      if (snapshot === lastSaved) return;
+      lastSaved = snapshot;
+      return inner.persistClient(client);
+    },
+    restoreClient: () => inner.restoreClient(),
+    removeClient() {
+      lastSaved = null;
+      return inner.removeClient();
+    },
+  };
 }
 
 /**

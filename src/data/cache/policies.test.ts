@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AppFailure, type AppError } from '@/domain';
+import { PERSIST_MAX_AGE } from './persister';
 import { policies } from './query-client';
 
 const failure = (error: AppError) => new AppFailure(error);
@@ -25,8 +26,8 @@ describe('policies.catalog.retry', () => {
     expect(policies.catalog.retry(0, failure(error))).toBe(false);
   });
 
-  it('backs off between retries', () => {
-    expect(policies.catalog.retryDelay(1)).toBeGreaterThan(policies.catalog.retryDelay(0));
+  it('keeps a restored catalog for as long as the persister does', () => {
+    expect(policies.catalog.gcTime).toBe(PERSIST_MAX_AGE);
   });
 });
 

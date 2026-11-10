@@ -1,7 +1,12 @@
-import { persistQueryClientRestore } from '@tanstack/react-query-persist-client';
+import {
+  persistQueryClientRestore,
+  persistQueryClientSave,
+} from '@tanstack/react-query-persist-client';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createStorage } from '@/data/persistence';
+import { createStorage, type KeyValueStore } from '@/data/persistence';
+import { catalogQueryOptions } from './catalog';
+import { executeOperation } from './operations';
 import { apiUrl, server } from '@/test/msw/server';
 import { persistCatalog } from '@/test/persisted-catalog';
 import { createCatalogPersister, persistOptions, PERSIST_CACHE_KEY } from './persister';
@@ -55,6 +60,32 @@ describe('catalog persister', () => {
       expect(client.getQueryData(['catalog'])).toBeUndefined();
     },
   );
+
+  it('does not rewrite the catalog when only operations changed', async () => {
+    let writes = 0;
+    const counting: KeyValueStore = {
+      getItem: (k) => localStorage.getItem(k),
+      setItem: (k, v) => {
+        if (k === PERSIST_CACHE_KEY) writes++;
+        localStorage.setItem(k, v);
+      },
+      removeItem: (k) => localStorage.removeItem(k),
+    };
+    const persister = createCatalogPersister(createStorage(counting));
+    const client = createQueryClient();
+    await client.fetchQuery(catalogQueryOptions());
+    await persistQueryClientSave({ queryClient: client, ...persistOptions(persister) });
+    await vi.waitFor(() => expect(writes).toBe(1), { timeout: 3000 });
+
+    await executeOperation(
+      client,
+      { algorithmId: 'caesar', operation: 'encrypt', input: 'a', options: { shift: 1 } },
+      { signal: new AbortController().signal, onWaking: () => {} },
+    );
+    await persistQueryClientSave({ queryClient: client, ...persistOptions(persister) });
+    await new Promise((r) => setTimeout(r, 1500));
+    expect(writes).toBe(1);
+  });
 
   it('ignores a corrupted persisted cache', async () => {
     localStorage.setItem(PERSIST_CACHE_KEY, '{broken');

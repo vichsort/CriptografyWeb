@@ -24,3 +24,6 @@ export function getConfig(): Config {
   cached = { apiUrl: parsed.data.replace(/\/+$/, '') };
   return cached;
 }
+
+/** Version from package.json, injected by next.config.ts. */
+export const APP_VERSION: string = process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev';

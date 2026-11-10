@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
+import { version } from './package.json';
 
 export default defineConfig({
   plugins: [react()],
@@ -10,6 +11,6 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['src/test/setup.ts'],
-    env: { NEXT_PUBLIC_API_URL: 'http://api.test' },
+    env: { NEXT_PUBLIC_API_URL: 'http://api.test', NEXT_PUBLIC_APP_VERSION: version },
   },
 });

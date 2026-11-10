@@ -69,6 +69,29 @@ describe('layer boundaries', () => {
       'boundaries/no-unknown-files',
     ],
     ['export const x = 1;', 'src/utils/x.ts', 'boundaries/no-unknown-files'],
+    [
+      "import { Form } from '@/features/workbench/components/Form';\nexport const y = Form;",
+      'src/app/x.tsx',
+      'boundaries/dependencies',
+    ],
+    [
+      "import { server } from '@/test/msw/server';\nexport const y = server;",
+      'src/features/home/x.ts',
+      'boundaries/no-unknown-dependencies',
+    ],
+    [
+      "import { x } from '@/featuers/home';\nexport const y = x;",
+      'src/features/home/x.ts',
+      'boundaries/no-unknown-dependencies',
+    ],
+    ['export const r = new XMLHttpRequest();', 'src/features/home/x.ts', 'no-restricted-globals'],
+    ["export const s = new EventSource('/x');", 'src/features/home/x.ts', 'no-restricted-globals'],
+    ["export const s = new WebSocket('ws://x');", 'src/data/cache/x.ts', 'no-restricted-globals'],
+    [
+      "export const b = () => navigator.sendBeacon('/x');",
+      'src/features/home/x.ts',
+      'no-restricted-properties',
+    ],
   ])('rejects %j in %s', async (code, filePath, ruleId) => {
     expect(await ruleIds(code, filePath)).toContain(ruleId);
   });
@@ -88,6 +111,9 @@ describe('layer boundaries', () => {
     ["import { request } from '@/data/http';\nexport const y = request;", 'src/data/api/x.ts'],
     ["export const get = () => window.fetch('/x');", 'src/data/http/x.ts'],
     ["export const read = () => window.localStorage.getItem('k');", 'src/data/persistence/x.ts'],
+    ["import { Form } from '@/features/workbench';\nexport const y = Form;", 'src/app/x.tsx'],
+    ["export const s = new EventSource('/x');", 'src/data/http/x.ts'],
+    ["export const b = () => navigator.sendBeacon('/x');", 'src/data/http/x.ts'],
   ])('allows %j in %s', async (code, filePath) => {
     expect(await ruleIds(code, filePath)).toEqual([]);
   });

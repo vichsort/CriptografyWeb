@@ -1,12 +1,15 @@
 import path from 'node:path';
 
-const UI_DIR = 'src/ui/';
-const CLASS_HELPERS = new Set(['cn']);
+const UI_DIR = path.resolve(import.meta.dirname, '..', 'src', 'ui');
+const CLASS_HELPERS = new Set(['cn', 'clsx', 'cx', 'cva', 'twMerge']);
 
 function isInsideUi(context) {
-  const cwd = context.cwd;
-  const relative = path.relative(cwd, path.resolve(cwd, context.filename));
-  return `${relative.split(path.sep).join('/')}/`.startsWith(UI_DIR);
+  const file = path.resolve(context.cwd, context.filename);
+  return file.startsWith(UI_DIR + path.sep);
+}
+
+function isClassAttribute(name) {
+  return name === 'className' || name.endsWith('ClassName');
 }
 
 function arbitraryClass(text) {
@@ -50,7 +53,8 @@ const rule = {
 
     return {
       JSXAttribute(node) {
-        if (node.name.type === 'JSXIdentifier' && node.name.name === 'className') check(node.value);
+        if (node.name.type === 'JSXIdentifier' && isClassAttribute(node.name.name))
+          check(node.value);
       },
       CallExpression(node) {
         if (node.callee.type === 'Identifier' && CLASS_HELPERS.has(node.callee.name)) {

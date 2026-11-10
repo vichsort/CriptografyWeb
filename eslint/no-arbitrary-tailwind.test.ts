@@ -45,5 +45,13 @@ tester.run('no-arbitrary-tailwind', rule, {
       filename: 'src/features/home/x.jsx',
       errors: [error],
     },
+    {
+      code: '<Icon iconClassName="p-[3px]" />',
+      filename: 'src/features/home/x.jsx',
+      errors: [error],
+    },
+    { code: "clsx('p-[3px]')", filename: 'src/features/home/x.js', errors: [error] },
+    { code: "cva('p-[3px]')", filename: 'src/features/home/x.js', errors: [error] },
+    { code: "twMerge('p-[3px]')", filename: 'src/features/home/x.js', errors: [error] },
   ],
 });

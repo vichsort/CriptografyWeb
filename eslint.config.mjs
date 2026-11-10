@@ -30,7 +30,7 @@ const elements = [
 const DATA_BASE = ['domain', 'config', 'lib'];
 
 const allowed = {
-  app: ['app', 'features', 'ui', 'content', 'config', 'lib'],
+  app: ['app', 'ui', 'content', 'config', 'lib'],
   features: ['ui', 'content', 'domain', 'config', 'lib', 'data-cache', 'data-persistence'],
   'data-http': ['data-http', ...DATA_BASE],
   'data-api': ['data-api', 'data-http', ...DATA_BASE],
@@ -48,7 +48,8 @@ const layerPolicies = Object.entries(allowed).map(([from, to]) => ({
   allow: { to: { element: { types: to } } },
 }));
 
-// A feature reaches another feature only through its public index.ts.
+// Features are reached only through their public index.ts, by the app and by other features.
+// Inside a feature, any file may import any other.
 const featurePolicies = [
   {
     from: { element: { type: 'features' } },
@@ -59,39 +60,45 @@ const featurePolicies = [
     },
   },
   {
-    from: { element: { type: 'features' } },
+    from: { element: { types: ['app', 'features'] } },
     allow: { to: { element: { type: 'features', fileInternalPath: 'index.{ts,tsx}' } } },
   },
 ];
 
-const restrictedGlobal = {
-  fetch: { name: 'fetch', message: 'Only src/data/http may call fetch.' },
-  localStorage: {
-    name: 'localStorage',
-    message: 'Only src/data/persistence may use localStorage.',
+const GLOBAL_OBJECTS = ['window', 'globalThis', 'self'];
+
+// Browser APIs that only one layer may use, as globals and as properties of their objects.
+const restricted = {
+  network: {
+    message: 'Only src/data/http may make network requests.',
+    globals: ['fetch', 'XMLHttpRequest', 'EventSource', 'WebSocket'],
+    properties: [{ object: 'navigator', property: 'sendBeacon' }],
   },
-  sessionStorage: {
-    name: 'sessionStorage',
-    message: 'Only src/data/persistence may use sessionStorage.',
+  storage: {
+    message: 'Only src/data/persistence may use web storage.',
+    globals: ['localStorage', 'sessionStorage'],
+    properties: [],
   },
 };
 
-const GLOBAL_OBJECTS = ['window', 'globalThis', 'self'];
-
-// Bans the globals both bare (`fetch`) and through a global object (`window.fetch`).
-const restrict = (...names) => ({
-  'no-restricted-globals': ['error', ...names.map((name) => restrictedGlobal[name])],
-  'no-restricted-properties': [
-    'error',
-    ...names.flatMap((name) =>
-      GLOBAL_OBJECTS.map((object) => ({
-        object,
-        property: name,
-        message: restrictedGlobal[name].message,
-      })),
-    ),
-  ],
-});
+const restrict = (...groups) => {
+  const rules = groups.map((group) => restricted[group]);
+  return {
+    'no-restricted-globals': [
+      'error',
+      ...rules.flatMap(({ message, globals }) => globals.map((name) => ({ name, message }))),
+    ],
+    'no-restricted-properties': [
+      'error',
+      ...rules.flatMap(({ message, globals, properties }) => [
+        ...globals.flatMap((property) =>
+          GLOBAL_OBJECTS.map((object) => ({ object, property, message })),
+        ),
+        ...properties.map((entry) => ({ ...entry, message })),
+      ]),
+    ],
+  };
+};
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -111,25 +118,29 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // Every source file belongs to a layer, so no folder escapes the dependency rules.
+    // Every source file belongs to a layer and imports only files that do, so nothing escapes
+    // the dependency rules (and test helpers never reach the app bundle).
     files: SOURCE,
     ignores: TESTS,
-    rules: { 'boundaries/no-unknown-files': 'error' },
+    rules: {
+      'boundaries/no-unknown-files': 'error',
+      'boundaries/no-unknown-dependencies': 'error',
+    },
   },
   {
     files: SOURCE,
     ignores: [...HTTP, ...PERSISTENCE, ...TESTS],
-    rules: restrict('fetch', 'localStorage', 'sessionStorage'),
+    rules: restrict('network', 'storage'),
   },
   {
     files: HTTP,
     ignores: TESTS,
-    rules: restrict('localStorage', 'sessionStorage'),
+    rules: restrict('storage'),
   },
   {
     files: PERSISTENCE,
     ignores: TESTS,
-    rules: restrict('fetch'),
+    rules: restrict('network'),
   },
   {
     files: ['src/domain/**'],

@@ -76,7 +76,22 @@ const restrictedGlobal = {
   },
 };
 
-const restrictGlobals = (...names) => ['error', ...names.map((name) => restrictedGlobal[name])];
+const GLOBAL_OBJECTS = ['window', 'globalThis', 'self'];
+
+// Bans the globals both bare (`fetch`) and through a global object (`window.fetch`).
+const restrict = (...names) => ({
+  'no-restricted-globals': ['error', ...names.map((name) => restrictedGlobal[name])],
+  'no-restricted-properties': [
+    'error',
+    ...names.flatMap((name) =>
+      GLOBAL_OBJECTS.map((object) => ({
+        object,
+        property: name,
+        message: restrictedGlobal[name].message,
+      })),
+    ),
+  ],
+});
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -96,19 +111,25 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    // Every source file belongs to a layer, so no folder escapes the dependency rules.
+    files: SOURCE,
+    ignores: TESTS,
+    rules: { 'boundaries/no-unknown-files': 'error' },
+  },
+  {
     files: SOURCE,
     ignores: [...HTTP, ...PERSISTENCE, ...TESTS],
-    rules: { 'no-restricted-globals': restrictGlobals('fetch', 'localStorage', 'sessionStorage') },
+    rules: restrict('fetch', 'localStorage', 'sessionStorage'),
   },
   {
     files: HTTP,
     ignores: TESTS,
-    rules: { 'no-restricted-globals': restrictGlobals('localStorage', 'sessionStorage') },
+    rules: restrict('localStorage', 'sessionStorage'),
   },
   {
     files: PERSISTENCE,
     ignores: TESTS,
-    rules: { 'no-restricted-globals': restrictGlobals('fetch') },
+    rules: restrict('fetch'),
   },
   {
     files: ['src/domain/**'],

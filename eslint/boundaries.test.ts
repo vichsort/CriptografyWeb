@@ -42,6 +42,33 @@ describe('layer boundaries', () => {
       'src/features/home/x.ts',
       'boundaries/dependencies',
     ],
+    [
+      "export const get = () => window.fetch('/x');",
+      'src/features/home/x.ts',
+      'no-restricted-properties',
+    ],
+    ["export const get = () => globalThis.fetch('/x');", 'src/ui/x.ts', 'no-restricted-properties'],
+    [
+      "export const read = () => globalThis.localStorage.getItem('k');",
+      'src/data/cache/x.ts',
+      'no-restricted-properties',
+    ],
+    [
+      "export const read = () => window.sessionStorage.getItem('k');",
+      'src/data/http/x.ts',
+      'no-restricted-properties',
+    ],
+    [
+      "export const get = () => self.fetch('/x');",
+      'src/data/persistence/x.ts',
+      'no-restricted-properties',
+    ],
+    [
+      "import { x } from '@/data/api';\nexport const y = x;",
+      'src/proxy.ts',
+      'boundaries/no-unknown-files',
+    ],
+    ['export const x = 1;', 'src/utils/x.ts', 'boundaries/no-unknown-files'],
   ])('rejects %j in %s', async (code, filePath, ruleId) => {
     expect(await ruleIds(code, filePath)).toContain(ruleId);
   });
@@ -59,6 +86,8 @@ describe('layer boundaries', () => {
     ],
     ["import { client } from '@/data/cache';\nexport const y = client;", 'src/features/home/x.ts'],
     ["import { request } from '@/data/http';\nexport const y = request;", 'src/data/api/x.ts'],
+    ["export const get = () => window.fetch('/x');", 'src/data/http/x.ts'],
+    ["export const read = () => window.localStorage.getItem('k');", 'src/data/persistence/x.ts'],
   ])('allows %j in %s', async (code, filePath) => {
     expect(await ruleIds(code, filePath)).toEqual([]);
   });

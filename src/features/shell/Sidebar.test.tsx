@@ -85,7 +85,9 @@ describe('Sidebar', () => {
     const aside = renderSidebar();
     await loaded(aside);
     await userEvent.type(within(aside).getByRole('searchbox', { name: 'Search' }), 'zzz');
-    expect(await within(aside).findByText(/Nothing for/)).toHaveTextContent('Nothing for “zzz”.');
+    const message = await within(aside).findByText(/Nothing for/);
+    expect(message).toHaveTextContent('Nothing for “zzz”.');
+    expect(message.closest('[aria-live="polite"]')).not.toBeNull();
   });
 
   it('clearing search restores the previous open state', async () => {

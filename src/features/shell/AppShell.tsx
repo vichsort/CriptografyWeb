@@ -29,22 +29,18 @@ export function AppShell({ sidebar, children }: { sidebar: ReactNode; children: 
       </main>
       {/* The URL is unknown while prerendering pages under an unknown dynamic segment. */}
       <Suspense fallback={null}>
-        <OnNavigate run={() => setMobileOpen(false)} />
+        <CloseMenuOnNavigate setMobileOpen={setMobileOpen} />
       </Suspense>
       <WarmUp />
     </SidebarStateContext>
   );
 }
 
-/** Runs `run` after every route change: the brand link, the back button, a link in the page. */
-function OnNavigate({ run }: { run: () => void }) {
+/** Closes the mobile menu after every route change: the brand link, Back, a link in the page. */
+function CloseMenuOnNavigate({ setMobileOpen }: { setMobileOpen(open: boolean): void }) {
   const pathname = usePathname();
-  const latest = useRef(run);
   useEffect(() => {
-    latest.current = run;
-  });
-  useEffect(() => {
-    latest.current();
-  }, [pathname]);
+    setMobileOpen(false);
+  }, [pathname, setMobileOpen]);
   return null;
 }

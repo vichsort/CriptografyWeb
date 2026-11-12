@@ -73,16 +73,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const dark = useSyncExternalStore(subscribeSystem, systemDark, serverFalse);
   const resolved: Resolved = preference === 'system' ? (dark ? 'dark' : 'light') : preference;
 
-  // A theme chosen in another tab. The document is never written from render values: during
-  // hydration they are the server's, and would undo what the head script set.
-  useEffect(() => preferences.subscribe(() => applyTheme(preferences.theme())), []);
+  // The one place the document gets the theme: a choice here or in another tab. It is never
+  // written from render values: during hydration they are the server's, and would undo what the
+  // head script set.
+  useEffect(
+    () =>
+      preferences.subscribe((key) => {
+        if (key === 'theme' || key === null) applyTheme(preferences.theme());
+      }),
+    [],
+  );
 
   const choose = useCallback((next: ThemePreference) => {
-    withViewTransition(() => {
-      // Synchronous, so the view transition captures the new theme and the new toggle state.
-      flushSync(() => preferences.setTheme(next));
-      applyTheme(next);
-    });
+    // Synchronous, so the view transition captures the new theme and the new toggle state.
+    withViewTransition(() => flushSync(() => preferences.setTheme(next)));
   }, []);
 
   const value = useMemo<ThemeState>(

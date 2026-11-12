@@ -39,4 +39,16 @@ describe('DateLine', () => {
     act(() => vi.advanceTimersByTime(24 * 60 * 60 * 1000));
     expect(screen.getByText('Thursday, November 12')).toBeInTheDocument();
   });
+
+  it('checks the date again when the page becomes visible, since timers stall in sleep', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 10, 10, 23, 0));
+    render(<DateLine />);
+    // The laptop slept through midnight; its timer has not fired.
+    vi.setSystemTime(new Date(2026, 10, 11, 9, 0));
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(screen.getByText('Wednesday, November 11')).toBeInTheDocument();
+  });
 });

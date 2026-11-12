@@ -42,8 +42,15 @@ export function useSidebarStateValue(): SidebarState {
   );
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // A change made in another tab.
-  useEffect(() => preferences.subscribe(() => markCollapsed(preferences.sidebarCollapsed())), []);
+  // The one place <html> gets the mark: a toggle here or in another tab.
+  useEffect(
+    () =>
+      preferences.subscribe((key) => {
+        if (key === 'sidebarCollapsed' || key === null)
+          markCollapsed(preferences.sidebarCollapsed());
+      }),
+    [],
+  );
 
   // The overlay exists only below the desktop breakpoint: growing past it closes the overlay.
   useEffect(() => {
@@ -59,10 +66,7 @@ export function useSidebarStateValue(): SidebarState {
   return useMemo(
     () => ({
       collapsed,
-      setCollapsed(v: boolean) {
-        preferences.setSidebarCollapsed(v);
-        markCollapsed(v);
-      },
+      setCollapsed: (v: boolean) => preferences.setSidebarCollapsed(v),
       mobileOpen,
       setMobileOpen,
     }),

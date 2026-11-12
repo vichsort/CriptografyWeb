@@ -28,6 +28,10 @@ export const MOBILE_MENU_ID = 'mobile-menu';
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+function isShown(element: HTMLElement): boolean {
+  return getComputedStyle(element).display !== 'none';
+}
+
 interface SidebarFrameProps {
   sidebar: ReactNode;
   /** The header's menu button: it stays reachable while the overlay is open, and gets focus back. */
@@ -63,10 +67,19 @@ function MobileOverlay({
   const dialogRef = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
 
-  // Focus moves into the dialog on open and back to the menu button on close.
+  // Focus moves into the dialog on open and back to the menu button on close. When the overlay
+  // closed because the window grew to desktop width, that button is hidden: the sidebar toggle,
+  // its desktop counterpart, takes focus instead.
   useEffect(() => {
     if (mobileOpen) dialogRef.current?.focus();
-    else if (wasOpen.current) menuButtonRef.current?.focus();
+    else if (wasOpen.current) {
+      const menu = menuButtonRef.current;
+      const target =
+        menu && isShown(menu)
+          ? menu
+          : document.querySelector<HTMLElement>(`[aria-controls="${SIDEBAR_ID}"]`);
+      target?.focus();
+    }
     wasOpen.current = mobileOpen;
   }, [mobileOpen, menuButtonRef]);
 

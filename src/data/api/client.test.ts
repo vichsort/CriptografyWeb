@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import catalog from '@/test/fixtures/catalog.json';
 import { messages } from '@/test/fixtures/messages';
 import { apiUrl, server } from '@/test/msw/server';
@@ -17,6 +17,30 @@ async function failureOf(promise: Promise<unknown>): Promise<AppError> {
 }
 
 describe('getCatalog', () => {
+  it('reports a slow answer through onWaking, as operations do', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      let release: () => void = () => {};
+      const released = new Promise<void>((resolve) => (release = resolve));
+      server.use(
+        http.get(apiUrl('/api/algorithms'), async () => {
+          await released;
+          return HttpResponse.json(catalog);
+        }),
+      );
+      const onWaking = vi.fn();
+      const pending = getCatalog(undefined, { onWaking });
+      await vi.advanceTimersByTimeAsync(2_900);
+      expect(onWaking).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(200);
+      expect(onWaking).toHaveBeenCalledOnce();
+      release();
+      expect(await pending).toHaveLength(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('maps the fixture to 8 algorithms with derived operations', async () => {
     const algorithms = await getCatalog();
     const byId = Object.fromEntries(algorithms.map((a) => [a.id, a]));

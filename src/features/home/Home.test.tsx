@@ -78,6 +78,14 @@ describe('Home', () => {
     expect(screen.queryByText(/options? for/)).toBeNull();
   });
 
+  it('announces the no-match message through the polite live region', async () => {
+    renderHome();
+    await screen.findByRole('link', { name: /Shift letters/ });
+    await userEvent.type(screen.getByRole('searchbox', { name: /Search/ }), 'zzz');
+    const message = await screen.findByText(/^Nothing for “zzz” yet/);
+    expect(message.closest('[aria-live="polite"]')).not.toBeNull();
+  });
+
   it('/ focuses the main search', async () => {
     renderHome();
     await userEvent.keyboard('/');

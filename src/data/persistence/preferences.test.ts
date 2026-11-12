@@ -61,4 +61,26 @@ describe('preferences', () => {
     window.dispatchEvent(new StorageEvent('storage', { key: 'cw:v1:theme' }));
     expect(listener).toHaveBeenCalledTimes(2);
   });
+
+  it('tells listeners which preference changed, here or in another tab', () => {
+    const prefs = fresh();
+    const listener = vi.fn();
+    prefs.subscribe(listener);
+
+    prefs.setTheme('dark');
+    prefs.setSidebarCollapsed(true);
+    prefs.setOpenFamilies(['hashing']);
+    window.dispatchEvent(new StorageEvent('storage', { key: 'cw:v1:sidebar.collapsed' }));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'cw:v1:catalog' }));
+    // A cleared storage changes every key at once.
+    window.dispatchEvent(new StorageEvent('storage', { key: null }));
+
+    expect(listener.mock.calls.map(([key]) => key)).toEqual([
+      'theme',
+      'sidebarCollapsed',
+      'openFamilies',
+      'sidebarCollapsed',
+      null,
+    ]);
+  });
 });

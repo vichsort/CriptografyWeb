@@ -4,49 +4,61 @@ import { createStorage, STORAGE_PREFIX, type Storage } from './storage';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
+export type PreferenceKey = 'theme' | 'sidebarCollapsed' | 'openFamilies';
+
+/** Receives the preference that changed, or `null` when every one may have (storage cleared). */
+export type PreferenceListener = (key: PreferenceKey | null) => void;
+
 export interface Preferences {
   theme(): ThemePreference;
   setTheme(t: ThemePreference): void;
   sidebarCollapsed(): boolean;
   setSidebarCollapsed(v: boolean): void;
-  openFamilies(): Family[];
+  openFamilies(): readonly Family[];
   setOpenFamilies(f: Family[]): void;
   /** Fires on every change, including changes made in other tabs. Returns the unsubscribe. */
-  subscribe(listener: () => void): () => void;
+  subscribe(listener: PreferenceListener): () => void;
 }
 
 const KEYS = {
   theme: 'theme',
   sidebarCollapsed: 'sidebar.collapsed',
   openFamilies: 'sidebar.openFamilies',
-} as const;
+} as const satisfies Record<PreferenceKey, string>;
+
+const BY_STORAGE_KEY = new Map<string, PreferenceKey>(
+  Object.entries(KEYS).map(([key, name]) => [STORAGE_PREFIX + name, key as PreferenceKey]),
+);
+
+export const DEFAULT_OPEN_FAMILIES: readonly Family[] = ['encryption'];
 
 const ThemeSchema = z.enum(['light', 'dark', 'system']);
 const OpenFamiliesSchema = z.array(z.enum(['encryption', 'hashing', 'encoding']));
-const DEFAULT_OPEN_FAMILIES: Family[] = ['encryption'];
 
 export function createPreferences(storage: Storage): Preferences {
-  const listeners = new Set<() => void>();
-  const notify = () => listeners.forEach((listener) => listener());
+  const listeners = new Set<PreferenceListener>();
+  const notify = (key: PreferenceKey | null) => listeners.forEach((listener) => listener(key));
 
   const onStorage = (event: StorageEvent) => {
-    if (event.key === null || event.key.startsWith(STORAGE_PREFIX)) notify();
+    if (event.key === null) return notify(null);
+    const key = BY_STORAGE_KEY.get(event.key);
+    if (key) notify(key);
   };
 
   // Snapshot reads must be referentially stable for useSyncExternalStore.
   let familiesRaw: string | null | undefined;
-  let families: Family[] = DEFAULT_OPEN_FAMILIES;
+  let families: readonly Family[] = DEFAULT_OPEN_FAMILIES;
 
   return {
     theme: () => storage.read(KEYS.theme, ThemeSchema, 'system'),
     setTheme(t) {
       storage.write(KEYS.theme, t);
-      notify();
+      notify('theme');
     },
     sidebarCollapsed: () => storage.read(KEYS.sidebarCollapsed, z.boolean(), false),
     setSidebarCollapsed(v) {
       storage.write(KEYS.sidebarCollapsed, v);
-      notify();
+      notify('sidebarCollapsed');
     },
     openFamilies() {
       const raw = storage.kv.getItem(STORAGE_PREFIX + KEYS.openFamilies);
@@ -58,7 +70,7 @@ export function createPreferences(storage: Storage): Preferences {
     },
     setOpenFamilies(f) {
       storage.write(KEYS.openFamilies, f);
-      notify();
+      notify('openFamilies');
     },
     subscribe(listener) {
       if (listeners.size === 0 && typeof window !== 'undefined') {

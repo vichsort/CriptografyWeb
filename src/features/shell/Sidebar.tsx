@@ -1,16 +1,17 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Suspense, useMemo, useState, useSyncExternalStore } from 'react';
-import { errorCopy, joinCatalog, shell, ui } from '@/content';
+import { Suspense, useState } from 'react';
+import { errorCopy, shell, ui } from '@/content';
 import { useCatalog, useCatalogWaking } from '@/data/cache';
 import { preferences } from '@/data/persistence';
 import { FAMILIES, type Family } from '@/domain';
-import { buildSearchIndex, normalizeText, searchEntries } from '@/features/search';
+import { normalizeText, useCatalogSearch } from '@/features/search';
 import { HomeIcon, InlineMessage, ListRow, SearchField, Skeleton, ThemeToggle } from '@/ui';
 import { useSidebarPlacement } from './SidebarFrame';
 import { SidebarFamilies } from './SidebarFamilies';
 import { useTheme } from './ThemeProvider';
+import { useOpenFamilies } from './useOpenFamilies';
 import { useSidebarState } from './useSidebarState';
 
 /**
@@ -37,26 +38,13 @@ function SidebarContent({ pathname }: { pathname: string | null }) {
   const theme = useTheme();
   const catalog = useCatalog();
   const waking = useCatalogWaking();
-  const savedOpen = useSyncExternalStore(
-    preferences.subscribe,
-    preferences.openFamilies,
-    preferences.openFamilies,
-  );
+  const savedOpen = useOpenFamilies();
 
   const [query, setQuery] = useState('');
   // Opened or closed by hand during a search. Dropped when the search clears, so the saved state
   // comes back untouched.
   const [searchOpen, setSearchOpen] = useState<Partial<Record<Family, boolean>>>({});
-  const searching = normalizeText(query) !== '';
-
-  const index = useMemo(() => buildSearchIndex(joinCatalog(catalog.data ?? [])), [catalog.data]);
-  const groups = useMemo(() => {
-    const matches = searchEntries(index, query);
-    return FAMILIES.map((family) => ({
-      family,
-      entries: matches.filter((e) => e.family === family),
-    })).filter((g) => !searching || g.entries.length > 0);
-  }, [index, query, searching]);
+  const { groups, searching } = useCatalogSearch(query);
 
   const onQuery = (next: string) => {
     setQuery(next);
@@ -111,11 +99,13 @@ function SidebarContent({ pathname }: { pathname: string | null }) {
             iconSize={overlay ? 'md' : 'sm'}
             onPick={onPick}
           />
-          {searching && groups.length === 0 && (
-            <p className="px-2 text-footnote text-label-secondary">
-              {shell.noMatches(query.trim())}
-            </p>
-          )}
+          <div aria-live="polite">
+            {searching && groups.length === 0 && (
+              <p className="px-2 text-footnote text-label-secondary">
+                {shell.noMatches(query.trim())}
+              </p>
+            )}
+          </div>
         </div>
       )}
 

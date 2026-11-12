@@ -1,8 +1,9 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCatalog } from '@/data/cache';
+import { preferences } from '@/data/persistence';
 import catalog from '@/test/fixtures/catalog.json';
 import { stubMatchMedia } from '@/test/match-media';
 import { apiUrl, server } from '@/test/msw/server';
@@ -75,6 +76,14 @@ describe('AppShell', () => {
     expect(document.documentElement.dataset.sidebar).toBeUndefined();
   });
 
+  it('leaves the sidebar mark alone when another preference changes', () => {
+    renderShell();
+    document.documentElement.dataset.sidebar = 'sentinel';
+    act(() => preferences.setOpenFamilies(['hashing']));
+    act(() => preferences.setTheme('dark'));
+    expect(document.documentElement.dataset.sidebar).toBe('sentinel');
+  });
+
   it('renders the sidebar in the desktop frame', () => {
     renderShell();
     expect(screen.getByRole('navigation', { name: 'fake desktop' })).toBeInTheDocument();
@@ -129,6 +138,15 @@ describe('AppShell', () => {
     expect(document.body.style.overflow).toBe('');
   });
 
+  it('the brand link closes the overlay even on the page it points to', async () => {
+    renderShell();
+    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    await userEvent.click(
+      within(screen.getByRole('banner')).getByRole('link', { name: 'Criptografy' }),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
   it('the page behind the open overlay is inert', async () => {
     renderShell(<button type="button">page action</button>);
     await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
@@ -152,6 +170,18 @@ describe('AppShell', () => {
     media.set('(min-width: 1024px)', true);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(document.body.style.overflow).toBe('');
+  });
+
+  it('closing the overlay at desktop width hands focus to the visible sidebar toggle', async () => {
+    const media = stubMatchMedia({ '(min-width: 1024px)': false });
+    renderShell();
+    const menu = screen.getByRole('button', { name: 'Open menu' });
+    await userEvent.click(menu);
+    // At desktop width the menu button is display:none (lg:hidden); jsdom has no stylesheet.
+    menu.style.display = 'none';
+    media.set('(min-width: 1024px)', true);
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Hide sidebar' })).toHaveFocus();
   });
 
   it('top progress bar is active while a request is in flight', async () => {

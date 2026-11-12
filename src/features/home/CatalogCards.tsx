@@ -1,10 +1,9 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import { useMemo } from 'react';
-import { errorCopy, joinCatalog, ui } from '@/content';
+import { errorCopy, ui } from '@/content';
 import { useCatalog, useCatalogWaking } from '@/data/cache';
-import { buildSearchIndex, normalizeText, searchEntries } from '@/features/search';
+import { useCatalogSearch } from '@/features/search';
 import { durations, InlineMessage, Skeleton, useReducedMotionSafe } from '@/ui';
 import { FamilyCards } from './FamilyCards';
 
@@ -18,10 +17,7 @@ export function CatalogCards({ query }: { query?: string }) {
   const waking = useCatalogWaking();
   const reduced = useReducedMotionSafe();
 
-  const entries = useMemo(() => joinCatalog(catalog.data ?? []), [catalog.data]);
-  const index = useMemo(() => buildSearchIndex(entries), [entries]);
-  const matches = useMemo(() => searchEntries(index, query ?? ''), [index, query]);
-  const searching = normalizeText(query ?? '') !== '';
+  const { entries, matches, searching } = useCatalogSearch(query ?? '');
   const shown = (query ?? '').trim();
 
   if (catalog.data === undefined) {
@@ -57,24 +53,27 @@ export function CatalogCards({ query }: { query?: string }) {
   return (
     <div>
       {query !== undefined && (
-        <div aria-live="polite" className="mt-2 ml-1 min-h-5 text-footnote text-label-tertiary">
-          {searching && !empty && ui.resultsCount(matches.length, shown)}
+        // One polite region, mounted before any search, announces the count or the empty state.
+        <div aria-live="polite">
+          <p className="mt-2 ml-1 min-h-5 text-footnote text-label-tertiary">
+            {searching && !empty && ui.resultsCount(matches.length, shown)}
+          </p>
+          <AnimatePresence initial={false}>
+            {empty && (
+              <motion.p
+                key="empty"
+                className="material-glass-regular mt-4 max-w-prose rounded-xl px-5 py-4 text-callout text-label-secondary"
+                initial={{ opacity: 0, y: reduced ? 0 : 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: durations.base }}
+              >
+                {ui.noResults(shown, names)}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
       )}
-      <AnimatePresence initial={false}>
-        {empty && (
-          <motion.p
-            key="empty"
-            className="material-glass-regular mt-4 max-w-prose rounded-xl px-5 py-4 text-callout text-label-secondary"
-            initial={{ opacity: 0, y: reduced ? 0 : 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: durations.base }}
-          >
-            {ui.noResults(shown, names)}
-          </motion.p>
-        )}
-      </AnimatePresence>
       <div className="mt-4">
         <FamilyCards entries={matches} />
       </div>

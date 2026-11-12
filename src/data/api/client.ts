@@ -35,8 +35,16 @@ function toAlgorithm(dto: AlgorithmDto): Algorithm {
   };
 }
 
-export async function getCatalog(signal?: AbortSignal): Promise<Algorithm[]> {
-  const body = await request({ method: 'GET', path: '/api/algorithms', ...(signal && { signal }) });
+export async function getCatalog(
+  signal?: AbortSignal,
+  opts: { onWaking?: () => void } = {},
+): Promise<Algorithm[]> {
+  const body = await request({
+    method: 'GET',
+    path: '/api/algorithms',
+    ...(signal && { signal }),
+    ...(opts.onWaking && { onWaking: opts.onWaking }),
+  });
   const entries = parse(CatalogDto, body).data.map((entry) => AlgorithmDto.safeParse(entry));
   const valid = entries.flatMap((r) => (r.success ? [toAlgorithm(r.data)] : []));
   const firstFailure = entries.find((r) => !r.success);

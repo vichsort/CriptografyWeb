@@ -1,6 +1,9 @@
 export {
   createPreferences,
   preferences,
+  DEFAULT_OPEN_FAMILIES,
+  type PreferenceKey,
+  type PreferenceListener,
   type Preferences,
   type ThemePreference,
 } from './preferences';

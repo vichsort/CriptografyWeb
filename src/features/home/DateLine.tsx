@@ -8,7 +8,9 @@ const formatter = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
 });
 
-// Re-renders at every midnight, so a page left open for days keeps showing today.
+// Re-renders at every midnight, so a page left open for days keeps showing today. Timers stall
+// while the device sleeps and in background tabs, so the date is also checked when the page
+// becomes visible again.
 function subscribe(onChange: () => void): () => void {
   let timer: ReturnType<typeof setTimeout>;
   const arm = () => {
@@ -20,7 +22,11 @@ function subscribe(onChange: () => void): () => void {
     }, midnight.getTime() - now.getTime());
   };
   arm();
-  return () => clearTimeout(timer);
+  document.addEventListener('visibilitychange', onChange);
+  return () => {
+    clearTimeout(timer);
+    document.removeEventListener('visibilitychange', onChange);
+  };
 }
 
 const today = () => formatter.format(new Date());

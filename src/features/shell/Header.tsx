@@ -30,6 +30,8 @@ export function Header({ menuButtonRef }: { menuButtonRef: RefObject<HTMLButtonE
 
         <Link
           href="/"
+          // Closes the menu here too: on "/" already, the route does not change.
+          onClick={() => setMobileOpen(false)}
           className="flex items-center gap-2 rounded-sm text-body font-semibold tracking-tight text-label"
         >
           <BrandMark glyph={shell.brandMark} />

@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'motion/react';
 import { familyContent, type CatalogEntry } from '@/content';
-import { FAMILIES } from '@/domain';
+import { groupByFamily } from '@/features/search';
 import { durations, GlassCard, IconTile, ListRow, springs, useReducedMotionSafe } from '@/ui';
 
 /**
@@ -12,14 +12,12 @@ import { durations, GlassCard, IconTile, ListRow, springs, useReducedMotionSafe 
  */
 export function FamilyCards({ entries }: { entries: readonly CatalogEntry[] }) {
   const reduced = useReducedMotionSafe();
-  const groups = FAMILIES.map((family) => ({
-    family,
-    entries: entries.filter((e) => e.family === family),
-  })).filter((g) => g.entries.length > 0);
+  const groups = groupByFamily(entries);
 
   return (
     <div className="@container">
-      <div className="grid grid-cols-1 items-start gap-4 @prose:grid-cols-2 @prose:gap-5 @cards:grid-cols-3">
+      {/* popLayout takes a leaving card out of flow, positioned against this grid. */}
+      <div className="relative grid grid-cols-1 items-start gap-4 @prose:grid-cols-2 @prose:gap-5 @cards:grid-cols-3">
         <AnimatePresence initial={false} mode="popLayout">
           {groups.map(({ family, entries: rows }) => {
             const copy = familyContent[family];

@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { preferences } from '@/data/persistence';
 import { THEME_COLORS } from '@/ui';
 import { stubMatchMedia } from '@/test/match-media';
 import { ThemeProvider, useTheme } from './ThemeProvider';
@@ -97,6 +98,15 @@ describe('ThemeProvider', () => {
     expect(start).toHaveBeenCalledOnce();
     expect(document.documentElement.dataset.theme).toBe('dark');
     delete (document as { startViewTransition?: unknown }).startViewTransition;
+  });
+
+  it('leaves the document alone when another preference changes', () => {
+    stubMatchMedia({ [DARK]: false });
+    renderHook(() => useTheme(), { wrapper });
+    document.documentElement.dataset.theme = 'sentinel';
+    act(() => preferences.setOpenFamilies(['hashing']));
+    act(() => preferences.setSidebarCollapsed(true));
+    expect(document.documentElement.dataset.theme).toBe('sentinel');
   });
 
   it('works without matchMedia', () => {

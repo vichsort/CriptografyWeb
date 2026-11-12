@@ -41,4 +41,9 @@ describe('FamilyCards', () => {
     expect(screen.queryByRole('region', { name: 'Encrypt' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Hash' })).toBeNull();
   });
+
+  it('positions the grid, so a card leaving in popLayout fades out in its own cell', () => {
+    const { container } = render(<FamilyCards entries={entries} />);
+    expect(container.querySelector('.grid')).toHaveClass('relative');
+  });
 });

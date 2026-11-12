@@ -10,6 +10,9 @@ import { AppShell } from './AppShell';
 import { Providers } from './Providers';
 import { useSidebarPlacement } from './SidebarFrame';
 
+const navigation = vi.hoisted(() => ({ pathname: '/' }));
+vi.mock('next/navigation', () => ({ usePathname: () => navigation.pathname }));
+
 function FakeSidebar() {
   const placement = useSidebarPlacement();
   return (
@@ -20,16 +23,19 @@ function FakeSidebar() {
   );
 }
 
+const shell = (children: React.ReactNode) => (
+  <Providers>
+    <AppShell sidebar={<FakeSidebar />}>{children}</AppShell>
+  </Providers>
+);
+
 function renderShell(children: React.ReactNode = <p>page</p>) {
-  return render(
-    <Providers>
-      <AppShell sidebar={<FakeSidebar />}>{children}</AppShell>
-    </Providers>,
-  );
+  return render(shell(children));
 }
 
 describe('AppShell', () => {
   beforeEach(() => {
+    navigation.pathname = '/';
     stubMatchMedia({ '(min-width: 1024px)': false });
   });
   afterEach(() => {
@@ -109,6 +115,18 @@ describe('AppShell', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(menu).toHaveFocus();
     expect(menu).toHaveAccessibleName('Open menu');
+  });
+
+  it('any navigation closes the overlay, not only picking a sidebar row', async () => {
+    const { rerender } = renderShell();
+    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    navigation.pathname = '/learn';
+    rerender(shell(<p>page</p>));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('main')).not.toHaveAttribute('inert');
+    expect(document.body.style.overflow).toBe('');
   });
 
   it('the page behind the open overlay is inert', async () => {

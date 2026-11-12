@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, type ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
+import { Suspense, useEffect, useRef, type ReactNode } from 'react';
 import { useInFlight } from '@/data/cache';
 import { TopProgressBar } from '@/ui';
 import { Header } from './Header';
@@ -13,6 +14,7 @@ export function AppShell({ sidebar, children }: { sidebar: ReactNode; children: 
   const state = useSidebarStateValue();
   const inFlight = useInFlight();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const { setMobileOpen } = state;
 
   return (
     <SidebarStateContext value={state}>
@@ -25,7 +27,24 @@ export function AppShell({ sidebar, children }: { sidebar: ReactNode; children: 
       >
         {children}
       </main>
+      {/* The URL is unknown while prerendering pages under an unknown dynamic segment. */}
+      <Suspense fallback={null}>
+        <OnNavigate run={() => setMobileOpen(false)} />
+      </Suspense>
       <WarmUp />
     </SidebarStateContext>
   );
+}
+
+/** Runs `run` after every route change: the brand link, the back button, a link in the page. */
+function OnNavigate({ run }: { run: () => void }) {
+  const pathname = usePathname();
+  const latest = useRef(run);
+  useEffect(() => {
+    latest.current = run;
+  });
+  useEffect(() => {
+    latest.current();
+  }, [pathname]);
+  return null;
 }

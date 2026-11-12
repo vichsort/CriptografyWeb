@@ -8,11 +8,18 @@ const formatter = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
 });
 
-// Re-renders at midnight, so a page left open overnight shows the new day.
+// Re-renders at every midnight, so a page left open for days keeps showing today.
 function subscribe(onChange: () => void): () => void {
-  const now = new Date();
-  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  const timer = setTimeout(onChange, midnight.getTime() - now.getTime());
+  let timer: ReturnType<typeof setTimeout>;
+  const arm = () => {
+    const now = new Date();
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    timer = setTimeout(() => {
+      onChange();
+      arm();
+    }, midnight.getTime() - now.getTime());
+  };
+  arm();
   return () => clearTimeout(timer);
 }
 

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DateLine } from './DateLine';
@@ -28,5 +28,15 @@ describe('DateLine', () => {
     vi.setSystemTime(new Date(2027, 0, 1, 9, 30));
     render(<DateLine />);
     expect(screen.getByText('Friday, January 1')).toBeInTheDocument();
+  });
+
+  it('keeps turning the day on every midnight while the page stays open', () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+    vi.setSystemTime(new Date(2026, 10, 10, 9, 30));
+    render(<DateLine />);
+    act(() => vi.advanceTimersByTime(24 * 60 * 60 * 1000));
+    expect(screen.getByText('Wednesday, November 11')).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(24 * 60 * 60 * 1000));
+    expect(screen.getByText('Thursday, November 12')).toBeInTheDocument();
   });
 });

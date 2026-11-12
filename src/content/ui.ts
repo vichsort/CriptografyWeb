@@ -27,6 +27,18 @@ export const ui = {
   },
 } as const;
 
+/** The options form of the workbench. */
+export const form = {
+  wholeNumber: 'Enter a whole number, like 3 or -1.',
+  lettersOnly: 'Letters A–Z only, no spaces or accents.',
+  required: "This can't be empty.",
+  invalidJson: 'Enter valid JSON.',
+  mismatch: "This doesn't match the expected format.",
+  reveal: 'Show',
+  matrixFeedback: (determinant: number, residue: number, gcd: number) =>
+    `det(K) = ${determinant} · gcd(${residue}, 26) = ${gcd}${gcd === 1 ? ' ✓ invertible' : ''}`,
+} as const;
+
 /** The fixed header, the sidebar frame and the mobile menu. */
 export const shell = {
   nav: [

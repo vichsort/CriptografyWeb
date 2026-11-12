@@ -85,6 +85,60 @@ export const learn = {
   back: 'All articles',
 } as const;
 
+/** The page about the backend this app talks to. */
+export const about = {
+  title: 'About the API',
+  description: 'Every operation here runs on a small public API, built for learning.',
+  whatItIs: {
+    title: 'What it is',
+    body: 'An educational REST API built with Laravel 13 on PHP 8.3. It is stateless: nothing you send is stored. It encrypts, decrypts, hashes, encodes and decodes text, and describes each algorithm, options included, so this site can build its forms from it.',
+  },
+  contract: {
+    title: 'Contract',
+    headers: ['Method', 'Path', 'Body', 'Success'] as const,
+    endpoints: [
+      ['GET', '/api/algorithms', 'none', '{ "data": [metadata, …] }'],
+      ['POST', '/api/encrypt', '{ algorithm, input, options }', '{ "result": "…" }'],
+      ['POST', '/api/decrypt', '{ algorithm, input, options }', '{ "result": "…" }'],
+      ['POST', '/api/hash', '{ algorithm, input }', '{ "result": "…" }'],
+      ['POST', '/api/encode', '{ algorithm, input }', '{ "result": "…" }'],
+      ['POST', '/api/decode', '{ algorithm, input }', '{ "result": "…" }'],
+      ['GET', '/', 'none', '{ name, status, version }'],
+      ['GET', '/up', 'none', 'health check for the host'],
+    ] as const,
+    note: 'Errors come back as 404, 405, 422 or 429 with a message written for people. Input is used exactly as sent: spaces count.',
+  },
+  quality: {
+    title: 'Quality bar',
+    items: [
+      '100% line coverage, enforced in CI.',
+      'Mutation testing with Infection: at least 95% of mutants caught.',
+      'PHPStan at level max over the whole codebase, tests included, with no baseline.',
+    ],
+  },
+  source: {
+    title: 'Source',
+    links: [
+      {
+        label: 'API: github.com/vichsort/Criptografy',
+        href: 'https://github.com/vichsort/Criptografy',
+      },
+      {
+        label: 'This site: github.com/vichsort/CriptografyWeb',
+        href: 'https://github.com/vichsort/CriptografyWeb',
+      },
+    ],
+  },
+  status: {
+    title: 'Live status',
+    checking: 'Checking…',
+    name: 'Name',
+    state: 'Status',
+    version: 'Version',
+    unavailable: 'Unavailable right now. The server may be asleep.',
+  },
+} as const;
+
 /** The fixed header, the sidebar frame and the mobile menu. */
 export const shell = {
   nav: [

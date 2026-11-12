@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { cn } from './cn';
 
 interface GlassCardProps {
@@ -6,6 +6,8 @@ interface GlassCardProps {
   hint?: ReactNode;
   description?: ReactNode;
   material?: 'thin' | 'regular';
+  /** Content runs edge to edge (list rows bring their own insets). */
+  flush?: boolean;
   children: ReactNode;
 }
 
@@ -15,13 +17,17 @@ export function GlassCard({
   hint,
   description,
   material = 'regular',
+  flush,
   children,
 }: GlassCardProps) {
+  const titleId = useId();
   const hasHeader = title != null || hint != null || description != null;
   return (
     <section
+      aria-labelledby={title != null ? titleId : undefined}
       className={cn(
         'rounded-xl',
+        flush && 'overflow-hidden',
         material === 'thin' ? 'material-glass-thin' : 'material-glass-regular',
       )}
     >
@@ -29,7 +35,11 @@ export function GlassCard({
         <header className="px-4 pt-[14px]">
           {(title != null || hint != null) && (
             <div className="flex items-baseline justify-between gap-3">
-              {title != null && <h2 className="text-headline text-label">{title}</h2>}
+              {title != null && (
+                <h2 id={titleId} className="text-headline text-label">
+                  {title}
+                </h2>
+              )}
               {hint != null && <span className="text-mono-small text-label-tertiary">{hint}</span>}
             </div>
           )}
@@ -38,7 +48,14 @@ export function GlassCard({
           )}
         </header>
       )}
-      <div className={cn('px-4 pb-4', hasHeader ? 'pt-3' : 'pt-4')}>{children}</div>
+      <div
+        className={cn(
+          flush ? 'pb-1' : 'px-4 pb-4',
+          hasHeader ? (flush ? 'pt-2' : 'pt-3') : flush ? 'pt-1' : 'pt-4',
+        )}
+      >
+        {children}
+      </div>
     </section>
   );
 }

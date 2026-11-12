@@ -19,9 +19,25 @@ describe('GlassCard', () => {
     expect(heading.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it('is a region named by its title', () => {
+    render(<GlassCard title="Encrypt">x</GlassCard>);
+    expect(screen.getByRole('region', { name: 'Encrypt' })).toBeInTheDocument();
+  });
+
   it('uses the thin material when asked', () => {
     const { container } = render(<GlassCard material="thin">x</GlassCard>);
     expect(container.firstElementChild).toHaveClass('material-glass-thin');
+  });
+
+  it('flush content runs edge to edge, clipped to the corners', () => {
+    const { container } = render(
+      <GlassCard title="Encrypt" flush>
+        <ul data-testid="rows" />
+      </GlassCard>,
+    );
+    expect(container.firstElementChild).toHaveClass('overflow-hidden');
+    const body = screen.getByTestId('rows').parentElement;
+    expect(body).not.toHaveClass('px-4');
   });
 });
 

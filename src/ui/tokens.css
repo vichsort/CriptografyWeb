@@ -42,6 +42,8 @@
   --container-*: initial;
   --container-prose: 620px;
   --container-workbench: 760px;
+  /* Home cards go to three columns from this content width (§8). */
+  --container-cards: 960px;
   --container-content: 1080px;
 
   /* Fonts (§3): the Apple system font first, the next/font fallbacks after it. */

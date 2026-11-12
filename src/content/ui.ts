@@ -1,5 +1,11 @@
 import type { SecurityLevel } from '@/domain';
 
+/** "a", "a and b", "a, b and c". */
+function listOf(items: readonly string[]): string {
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
+}
+
 export const site = {
   name: 'Criptografy',
   description:
@@ -8,6 +14,11 @@ export const site = {
 
 export const ui = {
   homeTitle: 'What are we doing today?',
+  algorithmsTitle: 'Algorithms',
+  resultsCount: (count: number, query: string) =>
+    `${count} ${count === 1 ? 'option' : 'options'} for “${query}”`,
+  noResults: (query: string, names: readonly string[]) =>
+    `Nothing for “${query}” yet. The available algorithms are ${listOf(names)}.`,
   searchPlaceholder: 'Search: "password", "hash", "base64", "Caesar"…',
   sidebarSearchPlaceholder: 'Search',
   waking: {

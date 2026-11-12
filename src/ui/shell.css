@@ -1,0 +1,52 @@
+/*
+ * App shell geometry (docs/DESIGN.md §8, §10). The fixed header is 56px plus the top safe area,
+ * and everything under it is offset by the same amount.
+ */
+
+/* Set on <html> by the sidebar script before paint, and by the shell when the sidebar toggles. */
+@custom-variant sidebar-collapsed {
+  &:where([data-sidebar='collapsed'], [data-sidebar='collapsed'] *) {
+    @slot;
+  }
+}
+
+@utility h-header-safe {
+  height: calc(var(--spacing-header) + env(safe-area-inset-top, 0px));
+}
+
+@utility pt-header-safe {
+  padding-top: calc(var(--spacing-header) + env(safe-area-inset-top, 0px));
+}
+
+@utility top-header-safe {
+  top: calc(var(--spacing-header) + env(safe-area-inset-top, 0px));
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Bottom padding that clears the home indicator, on top of a regular gutter. */
+@utility pb-safe-8 {
+  padding-bottom: calc(var(--spacing-8) + env(safe-area-inset-bottom, 0px));
+}
+
+/* Side gutters that clear the notch in landscape. */
+@utility px-safe-4 {
+  padding-left: max(var(--spacing-4), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--spacing-4), env(safe-area-inset-right, 0px));
+}
+
+/* The main column reflows while the sidebar collapses. */
+@utility transition-padding {
+  transition-property: padding;
+  transition-timing-function: var(--ease-spring);
+  transition-duration: var(--duration-base);
+}
+
+/* The sidebar slides out, then leaves the tab order and the accessibility tree. */
+@utility transition-slide {
+  transition-property: transform, visibility;
+  transition-timing-function: var(--ease-spring);
+  transition-duration: var(--duration-base);
+}

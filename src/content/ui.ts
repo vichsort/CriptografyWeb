@@ -16,6 +16,25 @@ export const ui = {
   },
 } as const;
 
+/** The fixed header, the sidebar frame and the mobile menu. */
+export const shell = {
+  nav: [
+    { label: 'Algorithms', href: '/algorithms' },
+    { label: 'Learn', href: '/learn' },
+    { label: 'About the API', href: '/about' },
+  ],
+  brandMark: 'C',
+  navLabel: 'Main',
+  sidebarLabel: 'Sidebar',
+  showSidebar: 'Show sidebar',
+  hideSidebar: 'Hide sidebar',
+  openMenu: 'Open menu',
+  closeMenu: 'Close menu',
+  menuLabel: 'Menu',
+  home: 'Home',
+  theme: { light: 'Light', dark: 'Dark', useSystem: 'Use system setting' },
+} as const;
+
 export const securityLevelCopy: Record<SecurityLevel, string> = {
   educational: 'educational',
   modern: 'modern',

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { GlassCard } from './GlassCard';
+import { BrandMark } from './BrandMark';
 import { IconTile } from './IconTile';
 import { Skeleton } from './Skeleton';
 
@@ -39,5 +40,15 @@ describe('Skeleton', () => {
     const { container } = render(<Skeleton rows={4} />);
     expect(screen.getByRole('status', { name: 'Loading' })).toHaveAttribute('aria-busy', 'true');
     expect(container.querySelectorAll('[data-skeleton-row]')).toHaveLength(4);
+  });
+});
+
+describe('BrandMark', () => {
+  it('is a decorative tile in the inverse label colors', () => {
+    const { container } = render(<BrandMark glyph="C" />);
+    const mark = container.firstElementChild;
+    expect(mark).toHaveAttribute('aria-hidden', 'true');
+    expect(mark).toHaveClass('bg-label', 'text-label-inverse');
+    expect(mark).toHaveTextContent('C');
   });
 });

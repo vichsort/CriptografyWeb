@@ -117,3 +117,20 @@ export function MoonIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function SidebarIcon(props: IconProps) {
+  return (
+    <Icon strokeWidth={1.8} {...props}>
+      <rect x="3" y="4.5" width="18" height="15" rx="3" />
+      <path d="M9 4.5v15" />
+    </Icon>
+  );
+}
+
+export function HomeIcon(props: IconProps) {
+  return (
+    <Icon strokeWidth={1.9} {...props}>
+      <path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" />
+    </Icon>
+  );
+}

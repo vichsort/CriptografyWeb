@@ -1,4 +1,4 @@
-// Placeholder until the home screen lands (docs/ROADMAP.md, phase 3).
+// Placeholder until the home screen lands (phase 3, task 17).
 export default function Home() {
-  return <main className="flex flex-1 flex-col" />;
+  return null;
 }

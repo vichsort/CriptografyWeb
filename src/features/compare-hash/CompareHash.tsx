@@ -6,22 +6,30 @@ import { useEffect, useRef, useState } from 'react';
 import { compareHash, errorCopy, ui, workbench } from '@/content';
 import { executeOperation } from '@/data/cache';
 import { isAppFailure, type AppError } from '@/domain';
-import { ResultPanel, startCooldown, useCooling } from '@/features/workbench';
-import { ActivityIndicator, Button, durations, GlassCard, InlineMessage, TextArea } from '@/ui';
+import {
+  apiMessageOf,
+  RATE_LIMITED,
+  ResultPanel,
+  startCooldown,
+  toneOf,
+  UNKNOWN_ERROR,
+  useCooling,
+} from '@/features/workbench';
+import {
+  ActivityIndicator,
+  Button,
+  durations,
+  GlassCard,
+  InlineMessage,
+  pageColumn,
+  TextArea,
+} from '@/ui';
 
 type Outcome =
   | { kind: 'idle' }
   | { kind: 'running'; waking: boolean }
   | { kind: 'done'; a: string; b: string }
   | { kind: 'failed'; error: AppError };
-
-const UNKNOWN: AppError = { kind: 'server', status: 0, message: null };
-
-function toneOf(error: AppError) {
-  if (error.kind === 'rateLimited') return 'warning' as const;
-  if (error.kind === 'binaryResult') return 'info' as const;
-  return 'error' as const;
-}
 
 const fade = {
   initial: { opacity: 0, y: 6 },
@@ -71,8 +79,10 @@ export function CompareHash() {
       if (isCurrent()) setOutcome({ kind: 'done', a: hashA, b: hashB });
     } catch (e) {
       if (!isCurrent()) return;
-      const error = isAppFailure(e) ? e.error : UNKNOWN;
+      const error = isAppFailure(e) ? e.error : UNKNOWN_ERROR;
       if (error.kind === 'aborted') return;
+      // One side failed: the verdict is lost, so the other request is not worth waiting for.
+      controller.abort();
       if (error.kind === 'rateLimited') startCooldown(error.retryAfterSeconds);
       setOutcome({ kind: 'failed', error });
     } finally {
@@ -83,11 +93,13 @@ export function CompareHash() {
   const same = outcome.kind === 'done' && outcome.a === outcome.b;
   const verdict =
     outcome.kind === 'done' ? (same ? compareHash.same : compareHash.different) : null;
-  const failure = outcome.kind === 'failed' ? errorCopy(outcome.error, 'hash') : null;
+  // A cooldown that outlives its message (or started on another screen) still says why.
+  const error = outcome.kind === 'failed' ? outcome.error : cooling ? RATE_LIMITED : null;
+  const failure = error ? errorCopy(error, 'hash') : null;
   const announcement = verdict ?? failure?.title ?? '';
 
   return (
-    <div className="mx-auto w-full max-w-workbench px-4 pt-6 pb-12 sm:px-8 sm:pt-8 lg:px-10">
+    <div className={pageColumn}>
       <h1 className="mt-1 text-large-title text-label">{compareHash.title}</h1>
       <p className="mt-3 max-w-prose text-body text-label-secondary">{compareHash.description}</p>
 
@@ -131,18 +143,14 @@ export function CompareHash() {
               />
             </motion.div>
           )}
-          {outcome.kind === 'failed' && failure && (
-            <motion.div key="failed" {...fade}>
+          {error && failure && (
+            <motion.div key={`failed-${error.kind}`} {...fade}>
               <InlineMessage
                 live={false}
-                tone={toneOf(outcome.error)}
+                tone={toneOf(error)}
                 title={failure.title}
                 body={failure.body}
-                apiMessage={
-                  failure.showApiMessage && 'message' in outcome.error
-                    ? outcome.error.message
-                    : null
-                }
+                apiMessage={failure.showApiMessage ? apiMessageOf(error) : null}
               />
             </motion.div>
           )}

@@ -8,13 +8,13 @@ import {
   type Algorithm,
   type OperationRequest,
 } from '@/domain';
-import { AlgorithmDto, CatalogDto, ResultDto, StatusDto } from './schemas';
+import { AlgorithmDto, CatalogDto, ResultDto } from './schemas';
 
 /** Exact text of ../Criptografy/app/Cryptography/NonTextResultException.php. */
 export const NON_TEXT_RESULT_MESSAGE =
   'The operation result is not valid UTF-8 text (it contains binary bytes) and cannot be represented in the JSON response.';
 
-function parse<T>(schema: z.ZodType<T>, value: unknown): T {
+export function parse<T>(schema: z.ZodType<T>, value: unknown): T {
   const result = schema.safeParse(value);
   if (!result.success) {
     throw new AppFailure({ kind: 'contract', issues: result.error.message });
@@ -85,11 +85,4 @@ export async function runOperation(
     }
     throw e;
   }
-}
-
-export async function getApiStatus(
-  signal?: AbortSignal,
-): Promise<{ name: string; status: string; version: string }> {
-  const body = await request({ method: 'GET', path: '/', ...(signal && { signal }) });
-  return parse(StatusDto, body);
 }

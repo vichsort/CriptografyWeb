@@ -23,7 +23,9 @@ export {
 export { InlineMessage } from './InlineMessage';
 export { ListRow } from './ListRow';
 export { MatrixEditor } from './MatrixEditor';
+export { pageColumn } from './layout';
 export { MenuIcon } from './MenuIcon';
+export { NotFoundView } from './NotFoundView';
 export { durations, springs, useReducedMotionSafe } from './motion';
 export { identityMatrix, parseWholeNumber } from './numbers';
 export { NumberStepper } from './NumberStepper';

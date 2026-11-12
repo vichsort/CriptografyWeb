@@ -14,6 +14,7 @@ export {
   compareHash,
   form,
   learn,
+  notFoundPage,
   securityLevelCopy,
   shell,
   site,

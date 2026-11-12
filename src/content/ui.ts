@@ -83,6 +83,10 @@ export const learn = {
   description: 'Short reads on the ideas behind the tools.',
   minutes: (n: number) => `${n} min read`,
   back: 'All articles',
+  notFound: {
+    title: 'Article not found',
+    body: 'There is no article at this address. It may have been renamed or removed.',
+  },
 } as const;
 
 /** The page about the backend this app talks to. */
@@ -106,7 +110,7 @@ export const about = {
       ['GET', '/', 'none', '{ name, status, version }'],
       ['GET', '/up', 'none', 'health check for the host'],
     ] as const,
-    note: 'Errors come back as 404, 405, 422 or 429 with a message written for people. Input is used exactly as sent: spaces count.',
+    note: 'Errors come back as 404, 405, 422 or 429 with a message written for people, or as a 500 if something breaks on the server. Input is used exactly as sent: spaces count.',
   },
   quality: {
     title: 'Quality bar',
@@ -137,6 +141,13 @@ export const about = {
     version: 'Version',
     unavailable: 'Unavailable right now. The server may be asleep.',
   },
+} as const;
+
+/** Any address the app does not know. */
+export const notFoundPage = {
+  title: 'Page not found',
+  body: 'There is nothing at this address.',
+  link: 'Go to the home page',
 } as const;
 
 /** The fixed header, the sidebar frame and the mobile menu. */

@@ -4,7 +4,7 @@ import catalog from '@/test/fixtures/catalog.json';
 import { messages } from '@/test/fixtures/messages';
 import { apiUrl, server } from '@/test/msw/server';
 import { isAppFailure, type AppError } from '@/domain';
-import { getApiStatus, getCatalog, NON_TEXT_RESULT_MESSAGE, runOperation } from './client';
+import { getCatalog, NON_TEXT_RESULT_MESSAGE, runOperation } from './client';
 
 async function failureOf(promise: Promise<unknown>): Promise<AppError> {
   try {
@@ -169,15 +169,5 @@ describe('runOperation', () => {
     expect(
       (await failureOf(runOperation({ algorithmId: 'hex', operation: 'encode', input: 'a' }))).kind,
     ).toBe('contract');
-  });
-});
-
-describe('getApiStatus', () => {
-  it('parses name/status/version', async () => {
-    await expect(getApiStatus()).resolves.toEqual({
-      name: 'Criptografy API',
-      status: 'healthy',
-      version: '1.0.0',
-    });
   });
 });

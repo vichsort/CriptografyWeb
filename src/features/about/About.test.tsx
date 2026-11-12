@@ -32,6 +32,11 @@ describe('About', () => {
     ]);
   });
 
+  it('says that server errors (5xx) can happen too', () => {
+    render(<About />);
+    expect(screen.getByText(/500/)).toBeInTheDocument();
+  });
+
   it('has the description, the quality bar, the sources and the live status', () => {
     render(<About />);
     for (const name of ['What it is', 'Quality bar', 'Source', 'Live status']) {

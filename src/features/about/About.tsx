@@ -1,12 +1,12 @@
 import { Suspense } from 'react';
 import { about } from '@/content';
-import { ActivityIndicator, GlassCard } from '@/ui';
+import { ActivityIndicator, GlassCard, pageColumn } from '@/ui';
 import { ApiStatus } from './ApiStatus';
 
 /** A large title, then glass cards: what the API is, its contract, its quality bar, its source. */
 export function About() {
   return (
-    <div className="mx-auto w-full max-w-workbench px-4 pt-6 pb-12 sm:px-8 sm:pt-8 lg:px-10">
+    <div className={pageColumn}>
       <h1 className="mt-1 text-large-title text-label">{about.title}</h1>
       <p className="mt-3 max-w-prose text-body text-label-secondary">{about.description}</p>
 

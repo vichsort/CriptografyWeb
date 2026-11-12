@@ -1,11 +1,12 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { MotionGlobalConfig } from 'motion/react';
 import { createHash } from 'node:crypto';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createQueryClient } from '@/data/cache';
+import { startCooldown } from '@/features/workbench';
 import { apiUrl, server } from '@/test/msw/server';
 import { CompareHash } from './CompareHash';
 
@@ -14,6 +15,10 @@ beforeAll(() => {
 });
 afterAll(() => {
   MotionGlobalConfig.skipAnimations = false;
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
@@ -119,5 +124,37 @@ describe('CompareHash', () => {
 
     await fill(user, 'Text B', 'y');
     expect(screen.queryByText('Same text: the hashes match.', title)).toBeNull();
+  });
+
+  it('explains a cooldown that started elsewhere', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    startCooldown(5);
+    renderCompare();
+    expect(screen.getByRole('button', { name: 'Compare' })).toBeDisabled();
+    expect(screen.getByText('Wait a moment', title)).toBeInTheDocument();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_100);
+    });
+    expect(screen.getByRole('button', { name: 'Compare' })).toBeEnabled();
+    expect(screen.queryByText('Wait a moment', title)).toBeNull();
+  });
+
+  it('cancels the other text when one fails', async () => {
+    const signals: Record<string, AbortSignal> = {};
+    server.use(
+      http.post(apiUrl('/api/hash'), async ({ request }) => {
+        const { input } = (await request.json()) as { input: string };
+        signals[input] = request.signal;
+        if (input === 'bad') return HttpResponse.json({ message: 'nope' }, { status: 422 });
+        await new Promise(() => {});
+        return HttpResponse.json({ result: 'never' });
+      }),
+    );
+    const user = renderCompare();
+    await fill(user, 'Text A', 'bad');
+    await fill(user, 'Text B', 'slow');
+    await user.click(screen.getByRole('button', { name: 'Compare' }));
+    await screen.findByText("Couldn't generate the hash", title);
+    await waitFor(() => expect(signals.slow?.aborted).toBe(true));
   });
 });

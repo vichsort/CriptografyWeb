@@ -12,6 +12,7 @@ import {
   durations,
   GlassCard,
   InlineMessage,
+  pageColumn,
   SegmentedControl,
   Skeleton,
   springs,
@@ -20,7 +21,7 @@ import {
 } from '@/ui';
 import { AlgorithmNotFound } from './AlgorithmNotFound';
 import { useCooling } from './cooldown';
-import { WORKBENCH_COLUMN } from './layout';
+import { apiMessageOf, RATE_LIMITED, toneOf } from './messages';
 import { SchemaForm } from './form/SchemaForm';
 import { ResultPanel } from './ResultPanel';
 import { useRunOperation } from './useRunOperation';
@@ -36,23 +37,8 @@ function useShortcutLabel(): string {
   return apple ? workbench.shortcut.apple : workbench.shortcut.other;
 }
 
-type Tone = 'info' | 'warning' | 'error';
-
-function toneOf(error: AppError): Tone {
-  if (error.kind === 'rateLimited') return 'warning';
-  if (error.kind === 'binaryResult') return 'info';
-  return 'error';
-}
-
-function apiMessageOf(error: AppError): string | null {
-  return 'message' in error ? error.message : null;
-}
-
 /** Failures that may pass if the same request is sent again (ARCHITECTURE.md §6). */
 const RETRYABLE = new Set<AppError['kind']>(['network', 'timeout', 'server', 'contract']);
-
-/** Shown while the cooldown of an earlier 429 lasts, even after that run's message is gone. */
-const RATE_LIMITED: AppError = { kind: 'rateLimited', message: '', retryAfterSeconds: null };
 
 /** The API's per-field messages for one field of the request (ARCHITECTURE.md §6). */
 function fieldError(error: AppError | null, field: 'input' | 'options'): string | null {
@@ -64,7 +50,7 @@ function fieldError(error: AppError | null, field: 'input' | 'options'): string 
 /** The column with a placeholder, while the route or the catalog is not known yet. */
 export function WorkbenchFallback({ waking = false }: { waking?: boolean }) {
   return (
-    <div className={`${WORKBENCH_COLUMN} space-y-4`}>
+    <div className={`${pageColumn} space-y-4`}>
       {waking && <InlineMessage tone="info" title={ui.waking.title} body={ui.waking.body} />}
       <Skeleton rows={3} />
     </div>
@@ -80,7 +66,7 @@ export function Workbench({ id }: { id: string }) {
     if (catalog.isError) {
       const copy = errorCopy(catalog.error.error);
       return (
-        <div className={WORKBENCH_COLUMN}>
+        <div className={pageColumn}>
           <InlineMessage tone="error" title={copy.title} body={copy.body} />
         </div>
       );
@@ -176,7 +162,7 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
       };
 
   return (
-    <div className={WORKBENCH_COLUMN} onKeyDown={onKeyDown}>
+    <div className={pageColumn} onKeyDown={onKeyDown}>
       <WorkbenchHeader algorithm={algorithm} />
 
       <div className="mt-6 space-y-4">

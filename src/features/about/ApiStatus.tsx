@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { about } from '@/content';
 import { getApiStatus } from '@/data/cache/server';
 
@@ -9,6 +10,8 @@ const STATUS_TIMEOUT_MS = 4_000;
  * unreachable server is reported, never thrown: the page around it must still render.
  */
 export async function ApiStatus({ timeoutMs = STATUS_TIMEOUT_MS }: { timeoutMs?: number }) {
+  // Read per request, never at build: the clock and the API are runtime data.
+  await connection();
   let status: Awaited<ReturnType<typeof getApiStatus>> | null = null;
   try {
     status = await getApiStatus(AbortSignal.timeout(timeoutMs));

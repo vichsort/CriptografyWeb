@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { executeOperation } from '@/data/cache';
 import { isAppFailure, type AppError, type OperationRequest } from '@/domain';
 import { startCooldown } from './cooldown';
+import { UNKNOWN_ERROR } from './messages';
 
 type Status = 'idle' | 'running' | 'success' | 'error';
 
@@ -23,9 +24,6 @@ const IDLE: RunState = {
   error: null,
   requestKey: null,
 };
-
-/** What a failure that is not an AppFailure means to the screen: something went wrong. */
-const UNKNOWN: AppError = { kind: 'server', status: 0, message: null };
 
 /**
  * Runs one operation at a time. A new run aborts the pending one, and a settlement that arrives
@@ -60,7 +58,7 @@ export function useRunOperation() {
         setState({ status: 'success', waking: false, result, error: null, requestKey });
       } catch (e) {
         if (!isCurrent()) return;
-        const error = isAppFailure(e) ? e.error : UNKNOWN;
+        const error = isAppFailure(e) ? e.error : UNKNOWN_ERROR;
         if (error.kind === 'aborted') return;
         if (error.kind === 'rateLimited') startCooldown(error.retryAfterSeconds);
         setState({ status: 'error', waking: false, result: null, error, requestKey });

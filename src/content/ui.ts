@@ -77,6 +77,14 @@ export const compareHash = {
   hashOf: (label: 'A' | 'B') => `SHA-256 of ${label}`,
 } as const;
 
+/** The Learn section. */
+export const learn = {
+  title: 'Learn',
+  description: 'Short reads on the ideas behind the tools.',
+  minutes: (n: number) => `${n} min read`,
+  back: 'All articles',
+} as const;
+
 /** The fixed header, the sidebar frame and the mobile menu. */
 export const shell = {
   nav: [

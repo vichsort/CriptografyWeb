@@ -16,14 +16,26 @@ interface InlineMessageProps {
   body?: string | null;
   apiMessage?: string | null;
   icon?: ReactNode;
+  /**
+   * Whether the message is its own live region. A screen that announces through a live region
+   * of its own passes false, so the message is not read twice.
+   */
+  live?: boolean;
 }
 
 /** Headline, explanation, and the API's own message in monospace. Errors interrupt; the rest wait. */
-export function InlineMessage({ tone, title, body, apiMessage, icon }: InlineMessageProps) {
+export function InlineMessage({
+  tone,
+  title,
+  body,
+  apiMessage,
+  icon,
+  live = true,
+}: InlineMessageProps) {
   const { surface, accent, icon: toneIcon } = TONES[tone];
   return (
     <div
-      role={tone === 'error' ? 'alert' : 'status'}
+      role={live ? (tone === 'error' ? 'alert' : 'status') : undefined}
       className={cn('flex gap-3 rounded-lg px-4 py-3', surface)}
     >
       <span className={cn('mt-0.5 shrink-0 text-headline', accent)}>{icon ?? toneIcon}</span>

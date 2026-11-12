@@ -39,6 +39,29 @@ export const form = {
     `det(K) = ${determinant} · gcd(${residue}, 26) = ${gcd}${gcd === 1 ? ' ✓ invertible' : ''}`,
 } as const;
 
+const characters = (n: number) => `${n} ${n === 1 ? 'character' : 'characters'}`;
+
+/** The algorithm screen. */
+export const workbench = {
+  modeLabel: 'Mode',
+  options: 'Options',
+  input: 'Input',
+  inputHint: 'spaces count',
+  characters,
+  result: 'Result',
+  resultReady: (n: number) => `Result ready, ${characters(n)}.`,
+  keyRequired: 'Key required',
+  copy: 'Copy',
+  copied: 'Copied ✓',
+  useAsInput: 'Use as input',
+  shortcut: { apple: '⌘ Enter', other: 'Ctrl Enter' },
+  notFound: {
+    title: 'Algorithm not found',
+    body: 'There is no algorithm at this address. It may have been renamed or removed.',
+    link: 'See all algorithms',
+  },
+} as const;
+
 /** The fixed header, the sidebar frame and the mobile menu. */
 export const shell = {
   nav: [

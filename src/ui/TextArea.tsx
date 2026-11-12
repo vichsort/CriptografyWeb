@@ -16,6 +16,8 @@ import { describedBy, fieldSurface, plainTextEntry } from './field';
 
 type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
+  /** Keeps the label for assistive tech only, when a visible heading already names the field. */
+  labelHidden?: boolean;
   /** Shows the character count under the field. */
   counter?: boolean;
   note?: string;
@@ -33,7 +35,7 @@ const graphemes =
  * Counts what a person sees as characters: a joined emoji, a flag or a skin tone is one.
  * Without Intl.Segmenter it falls back to code points.
  */
-function characterCount(text: string): number {
+export function characterCount(text: string): number {
   const units: Iterator<unknown> = graphemes
     ? graphemes.segment(text)[Symbol.iterator]()
     : text[Symbol.iterator]();
@@ -48,6 +50,7 @@ const ANNOUNCE_DELAY_MS = 1000;
 /** A multi-line field that grows with its content. Whitespace is part of the value. */
 export function TextArea({
   label,
+  labelHidden = false,
   counter = false,
   note,
   formatCount = defaultCount,
@@ -119,7 +122,10 @@ export function TextArea({
 
   return (
     <div className={cn('min-w-0', className)}>
-      <label htmlFor={id} className="mb-1 block text-footnote font-semibold text-label">
+      <label
+        htmlFor={id}
+        className={labelHidden ? 'sr-only' : 'mb-1 block text-footnote font-semibold text-label'}
+      >
         {label}
       </label>
       <textarea

@@ -34,6 +34,12 @@ describe('TextArea', () => {
     expect(screen.getByText('3 characters')).toBeInTheDocument();
   });
 
+  it('can keep its label for assistive tech only', () => {
+    render(<TextArea label="Input" labelHidden />);
+    expect(screen.getByRole('textbox', { name: 'Input' })).toBeInTheDocument();
+    expect(screen.getByText('Input')).toHaveClass('sr-only');
+  });
+
   it('shows the note and turns off spellcheck', () => {
     render(<TextArea label="Text" note="Spaces count" />);
     expect(screen.getByText('Spaces count')).toBeInTheDocument();

@@ -26,6 +26,13 @@ describe('InlineMessage', () => {
     expect(screen.getByRole(role)).toHaveTextContent('Heads up');
   });
 
+  it('leaves announcing to a live region it lives in when not live', () => {
+    render(<InlineMessage tone="error" title="Heads up" live={false} />);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByText('Heads up')).toBeInTheDocument();
+  });
+
   it('omits body and apiMessage when they are null', () => {
     const { container } = render(
       <InlineMessage tone="info" title="Heads up" body={null} apiMessage={null} />,

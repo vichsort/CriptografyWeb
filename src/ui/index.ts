@@ -36,7 +36,7 @@ export { SearchField } from './SearchField';
 export { SegmentedControl } from './SegmentedControl';
 export { SIDEBAR_STORAGE_KEY, sidebarScript } from './sidebar-script';
 export { Skeleton } from './Skeleton';
-export { TextArea } from './TextArea';
+export { characterCount, TextArea } from './TextArea';
 export { TextField } from './TextField';
 export { THEME_COLORS, THEME_STORAGE_KEY, themeScript } from './theme-script';
 export { ThemeToggle } from './ThemeToggle';

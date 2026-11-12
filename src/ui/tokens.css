@@ -3,11 +3,11 @@
  * Namespaces Tailwind would fill with its own defaults are reset, so only these tokens exist.
  *
  * Light values live in @theme and :root. Dark values are written twice, with the same
- * declarations: once for an explicit theme (data-theme, set by the theme script) and once for a
- * dark system without JavaScript. src/ui/tokens.test.ts keeps the two identical.
+ * declarations: once for an explicit theme (data-theme, set by the theme script) and once for the
+ * system theme on a dark system (no data-theme). src/ui/tokens.test.ts keeps the two identical.
  */
 
-/* `dark:` follows the chosen theme, and the system setting when no theme was set (no JavaScript). */
+/* `dark:` follows the chosen theme, and the system setting when no theme was chosen. */
 @custom-variant dark {
   &:where([data-theme='dark'], [data-theme='dark'] *) {
     @slot;
@@ -225,7 +225,7 @@
   --scrollbar-thumb-hover: rgb(255 255 255 / 0.36);
 }
 
-/* A dark system without JavaScript: the same declarations as the block above. */
+/* The system theme on a dark system: the same declarations as the block above. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;

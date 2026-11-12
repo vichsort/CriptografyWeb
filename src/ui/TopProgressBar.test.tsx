@@ -1,4 +1,5 @@
 import { act, render } from '@testing-library/react';
+import { Profiler } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const reduced = vi.hoisted(() => ({ value: false }));
@@ -38,9 +39,10 @@ describe('TopProgressBar', () => {
     const { container } = render(<TopProgressBar active />);
     act(() => vi.advanceTimersByTime(100));
     expect(bar(container)).toBeNull();
-    act(() => vi.advanceTimersByTime(200));
+    act(() => vi.advanceTimersByTime(100));
     const shown = bar(container);
     expect(shown).not.toBeNull();
+    act(() => vi.advanceTimersByTime(200));
     expect(shown?.style.transform).toMatch(/scaleX\(0\.\d+\)/);
   });
 
@@ -89,5 +91,20 @@ describe('TopProgressBar', () => {
   it('is hidden from assistive tech', () => {
     const { container } = render(<TopProgressBar active />);
     expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('trickles without re-rendering on every frame', () => {
+    const onRender = vi.fn();
+    const { container } = render(
+      <Profiler id="bar" onRender={onRender}>
+        <TopProgressBar active />
+      </Profiler>,
+    );
+    act(() => vi.advanceTimersByTime(300));
+    const renders = onRender.mock.calls.length;
+    const before = bar(container)?.style.transform;
+    act(() => vi.advanceTimersByTime(2000));
+    expect(bar(container)?.style.transform).not.toBe(before);
+    expect(onRender.mock.calls.length).toBe(renders);
   });
 });

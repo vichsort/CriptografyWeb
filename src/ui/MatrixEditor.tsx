@@ -39,6 +39,17 @@ function resizeMatrix(matrix: number[][], n: number): number[][] {
 
 const WHOLE = /^-?\d+$/;
 
+/**
+ * The number a cell's text commits, or null while it stays a draft: text that is not a whole
+ * number yet ("", "-"), "-0" (committing it would drop the sign being typed), and numbers too long
+ * to keep exact.
+ */
+function wholeNumber(text: string): number | null {
+  if (!WHOLE.test(text)) return null;
+  const n = Number(text);
+  return Number.isSafeInteger(n) && !Object.is(n, -0) ? n : null;
+}
+
 function without(drafts: Record<string, string>, key: string): Record<string, string> {
   const next = { ...drafts };
   delete next[key];
@@ -69,7 +80,7 @@ export function MatrixEditor({
   const reduced = useReducedMotionSafe();
   const n = value.length;
   const cells = useRef(new Map<string, HTMLInputElement>());
-  // Text being typed that is not a whole number yet ("", "-"), per cell.
+  // Text being typed that does not commit yet (see wholeNumber), per cell.
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const resize = (size: number) =>
@@ -77,11 +88,10 @@ export function MatrixEditor({
 
   const edit = (r: number, c: number, text: string) => {
     const key = `${r}-${c}`;
-    if (WHOLE.test(text)) {
+    const n = wholeNumber(text);
+    if (n !== null) {
       setDrafts((d) => without(d, key));
-      onChange(
-        value.map((row, i) => (i === r ? row.map((v, j) => (j === c ? Number(text) : v)) : row)),
-      );
+      onChange(value.map((row, i) => (i === r ? row.map((v, j) => (j === c ? n : v)) : row)));
     } else {
       setDrafts((d) => ({ ...d, [key]: text }));
     }

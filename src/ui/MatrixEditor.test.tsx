@@ -169,4 +169,45 @@ describe('MatrixEditor', () => {
     expect(container.querySelector('[aria-live="polite"]')).toBe(region);
     expect(region).toHaveTextContent('det(K) = 0');
   });
+
+  it('keeps "-0" as typed instead of committing a sign it cannot show', async () => {
+    const onChange = vi.fn();
+    render(
+      <Editor
+        initial={[
+          [1, 0],
+          [0, 1],
+        ]}
+        onChange={onChange}
+      />,
+    );
+    await userEvent.clear(cell(1, 2));
+    await userEvent.type(cell(1, 2), '-0');
+    expect(cell(1, 2)).toHaveValue('-0');
+    await userEvent.type(cell(1, 2), '7');
+    expect(onChange).toHaveBeenLastCalledWith([
+      [1, -7],
+      [0, 1],
+    ]);
+  });
+
+  it('never commits a whole number too long to keep exact', async () => {
+    const onChange = vi.fn();
+    render(
+      <Editor
+        initial={[
+          [1, 0],
+          [0, 1],
+        ]}
+        onChange={onChange}
+      />,
+    );
+    await userEvent.clear(cell(1, 2));
+    onChange.mockClear();
+    await userEvent.type(cell(1, 2), '1234567890123456789');
+    expect(cell(1, 2)).toHaveValue('1234567890123456789');
+    for (const [m] of onChange.mock.calls as [number[][]][]) {
+      expect(Number.isSafeInteger(m[0]?.[1])).toBe(true);
+    }
+  });
 });

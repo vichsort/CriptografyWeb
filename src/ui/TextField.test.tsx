@@ -38,4 +38,16 @@ describe('TextField', () => {
     expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(input).toHaveAccessibleDescription('64 hex characters Too short.');
   });
+
+  it('keeps an aria-describedby passed by the caller', () => {
+    render(
+      <>
+        <p id="hint">Paste it from the vault.</p>
+        <TextField label="Key" help="64 hex characters" aria-describedby="hint" />
+      </>,
+    );
+    expect(screen.getByLabelText('Key')).toHaveAccessibleDescription(
+      '64 hex characters Paste it from the vault.',
+    );
+  });
 });

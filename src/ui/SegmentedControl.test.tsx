@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { SegmentedControl } from './SegmentedControl';
 
 const options = [
@@ -59,5 +59,25 @@ describe('SegmentedControl', () => {
     const [first, second] = screen.getAllByRole('radio');
     expect(first).toHaveAttribute('tabindex', '0');
     expect(second).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('steps from the focused segment, even when the value does not follow', async () => {
+    const three = [...options, { value: 'hash', label: 'Hash' }] as const;
+    const onChange = vi.fn();
+    render(
+      <SegmentedControl
+        options={three}
+        value={'none' as 'encrypt'}
+        onChange={onChange}
+        ariaLabel="Mode"
+      />,
+    );
+    screen.getByRole('radio', { name: 'Encrypt' }).focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(onChange).toHaveBeenLastCalledWith('decrypt');
+    expect(screen.getByRole('radio', { name: 'Decrypt' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(onChange).toHaveBeenLastCalledWith('encrypt');
+    expect(screen.getByRole('radio', { name: 'Encrypt' })).toHaveFocus();
   });
 });

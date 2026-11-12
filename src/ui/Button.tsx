@@ -18,7 +18,11 @@ type MotionConflicts =
   | 'onDragStart'
   | 'onDragEnd';
 
-export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, MotionConflicts> & {
+// The look comes only from variant and size; a wrapper places the button in its layout.
+export type ButtonProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  MotionConflicts | 'className'
+> & {
   variant?: Variant;
   size?: Size;
   /** Passing it at all (even false) marks a button that can load, so it reserves that width. */
@@ -56,7 +60,6 @@ export function Button({
   loading: loadingProp,
   loadingLabel,
   icon,
-  className,
   type = 'button',
   onClick,
   children,
@@ -87,6 +90,7 @@ export function Button({
 
   return (
     <motion.button
+      {...rest}
       type={type}
       disabled={disabled}
       aria-busy={loading || undefined}
@@ -100,11 +104,9 @@ export function Button({
         VARIANTS[variant],
         SIZES[size],
         loading && 'cursor-progress',
-        className,
       )}
       // React's CSSProperties types a few SVG keys (x, y) more loosely than Motion does.
       {...(style !== undefined && { style: style as MotionStyle })}
-      {...rest}
     >
       <span className="grid place-items-center">
         {canLoad && (

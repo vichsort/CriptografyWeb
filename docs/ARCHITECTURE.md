@@ -187,7 +187,7 @@ It stores UI preferences, plus the persisted catalog:
 | `sidebar.collapsed` | boolean (desktop) | `false` |
 | `sidebar.openFamilies` | list of family ids | first family open |
 
-**Theme without a flash.** A small inline script in `<head>` reads the stored theme and sets `data-theme` on `<html>` before the first paint. Components read the theme through a context backed by the preferences repository, never from `localStorage` directly.
+**Theme without a flash.** A small inline script in `<head>` reads the stored theme before the first paint. An explicit light or dark theme sets `data-theme` on `<html>` and the `theme-color` metas. The system theme sets nothing, so CSS follows `prefers-color-scheme` and keeps following it when the system switches. Components read the theme through a context backed by the preferences repository, never from `localStorage` directly.
 
 Keys and inputs are never stored.
 

@@ -2,7 +2,14 @@
 
 import { useId, useState, type InputHTMLAttributes } from 'react';
 import { cn } from './cn';
-import { Field, fieldDescription, fieldInput, fieldSurface, plainTextEntry } from './field';
+import {
+  describedBy,
+  Field,
+  fieldDescription,
+  fieldInput,
+  fieldSurface,
+  plainTextEntry,
+} from './field';
 import { EyeIcon, EyeOffIcon } from './icons';
 
 type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -41,7 +48,10 @@ export function TextField({
           id={id}
           type={secret ? (revealed ? 'text' : 'password') : type}
           aria-invalid={invalid || undefined}
-          aria-describedby={fieldDescription(id, help, error)}
+          aria-describedby={describedBy(
+            fieldDescription(id, help, error),
+            rest['aria-describedby'],
+          )}
           className={fieldInput}
         />
         {secret && (

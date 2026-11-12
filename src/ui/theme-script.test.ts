@@ -47,46 +47,52 @@ describe('themeScript', () => {
     expect(theme()).toBe('light');
   });
 
-  it('follows matchMedia when stored system or missing', () => {
+  it('leaves the theme to CSS when stored system or missing, so it follows the system live', () => {
     setSystemDark(true);
     localStorage.setItem(THEME_STORAGE_KEY, '"system"');
     run();
-    expect(theme()).toBe('dark');
+    expect(theme()).toBeUndefined();
+    expect(document.documentElement.style.colorScheme).toBe('');
 
     localStorage.clear();
-    setSystemDark(false);
     run();
-    expect(theme()).toBe('light');
+    expect(theme()).toBeUndefined();
   });
 
   it('survives malformed storage', () => {
     localStorage.setItem(THEME_STORAGE_KEY, '{oops');
     expect(run).not.toThrow();
-    expect(theme()).toBe('light');
+    expect(theme()).toBeUndefined();
 
     localStorage.setItem(THEME_STORAGE_KEY, '"purple"');
     run();
-    expect(theme()).toBe('light');
+    expect(theme()).toBeUndefined();
   });
 
   it('survives a throwing localStorage', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('SecurityError');
     });
-    setSystemDark(true);
     expect(run).not.toThrow();
-    expect(theme()).toBe('dark');
+    expect(theme()).toBeUndefined();
     vi.restoreAllMocks();
   });
 
-  it('sets theme-color meta', () => {
+  const metas = () => [...document.querySelectorAll('meta[name="theme-color"]')];
+
+  it('paints the browser chrome in an explicit theme, keeping the media queries', () => {
     localStorage.setItem(THEME_STORAGE_KEY, '"dark"');
     run();
-    const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
-    expect(metas).toHaveLength(2);
-    for (const meta of metas) {
+    expect(metas()).toHaveLength(2);
+    for (const meta of metas()) {
       expect(meta.getAttribute('content')).toBe(THEME_COLORS.dark);
-      expect(meta.hasAttribute('media')).toBe(false);
+      expect(meta.hasAttribute('media')).toBe(true);
     }
+  });
+
+  it('leaves the theme-color metas alone on the system theme', () => {
+    localStorage.setItem(THEME_STORAGE_KEY, '"system"');
+    run();
+    expect(metas().map((m) => m.getAttribute('content'))).toEqual(['x', 'y']);
   });
 });

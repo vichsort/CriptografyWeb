@@ -31,7 +31,7 @@ export function ListRow({
     'flex w-full min-w-0 items-center gap-3 pl-4 text-left',
     interactive &&
       'transition-colors duration-fast ease-standard hover:bg-fill active:bg-fill focus-visible:-outline-offset-2',
-    selected && 'bg-tint-weak hover:bg-tint-weak',
+    selected && 'bg-tint-weak hover:bg-tint-weak active:bg-tint-weak',
   );
   const content = (
     <>

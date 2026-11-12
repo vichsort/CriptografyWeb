@@ -22,11 +22,11 @@ export function Accordion({ title, count, open, onOpenChange, children }: Accord
     : { ...springs.gentle, opacity: { duration: durations.fast } };
 
   return (
-    <div className="material-glass-thin overflow-hidden rounded-lg">
+    <div className="material-glass-regular overflow-hidden rounded-lg">
       <button
         type="button"
         aria-expanded={open}
-        aria-controls={panelId}
+        aria-controls={open ? panelId : undefined}
         onClick={() => onOpenChange(!open)}
         className="flex w-full cursor-pointer items-center gap-2 px-3 py-[10px] text-left text-label focus-visible:-outline-offset-2"
       >

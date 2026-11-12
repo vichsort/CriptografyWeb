@@ -24,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         {/* Sets the theme before the first paint, so it never flashes. */}
         <script dangerouslySetInnerHTML={{ __html: themeScript() }} />
       </head>
-      <body className="app-background">{children}</body>
+      <body className="app-background flex flex-col">{children}</body>
     </html>
   );
 }

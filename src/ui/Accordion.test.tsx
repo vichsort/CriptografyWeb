@@ -18,6 +18,7 @@ describe('Accordion', () => {
     render(<Family />);
     const button = screen.getByRole('button', { name: /Encryption/ });
     expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(button).not.toHaveAttribute('aria-controls');
     expect(screen.queryByText('Caesar')).not.toBeInTheDocument();
 
     await userEvent.click(button);
@@ -36,5 +37,10 @@ describe('Accordion', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Hashing/ }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('uses the regular glass material', () => {
+    const { container } = render(<Family />);
+    expect(container.firstElementChild).toHaveClass('material-glass-regular');
   });
 });

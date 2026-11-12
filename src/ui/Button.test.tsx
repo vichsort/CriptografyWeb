@@ -87,4 +87,12 @@ describe('Button', () => {
     expect(screen.getByRole('button').querySelector('[data-spoke]')).toBeNull();
     expect(screen.getByRole('button')).not.toHaveAttribute('aria-busy');
   });
+
+  it('takes its look only from variant and size', () => {
+    // @ts-expect-error A class could silently fight the variant and size classes.
+    render(<Button className="h-9 rounded-pill">Copy</Button>);
+    const button = screen.getByRole('button', { name: 'Copy' });
+    expect(button).not.toHaveClass('h-9');
+    expect(button).toHaveClass('h-11');
+  });
 });

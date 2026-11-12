@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -27,6 +27,11 @@ describe('TextArea', () => {
   it('counts characters, including spaces and emoji as one each', () => {
     render(<Controlled initial=" a😀 " />);
     expect(screen.getByText('4 characters')).toBeInTheDocument();
+  });
+
+  it('counts joined emoji, flags and skin tones as one character each', () => {
+    render(<Controlled initial="👩‍💻🇧🇷👍🏽" />);
+    expect(screen.getByText('3 characters')).toBeInTheDocument();
   });
 
   it('shows the note and turns off spellcheck', () => {
@@ -66,5 +71,34 @@ describe('TextArea', () => {
       notify();
       expect(area.style.height).toBe('240px');
     });
+  });
+
+  it('announces the count once typing pauses, not on every keystroke', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const { container } = render(<Controlled />);
+      const status = container.querySelector('[role="status"]');
+      expect(status).toBeEmptyDOMElement();
+      for (const text of ['a', 'ab', 'abc']) {
+        fireEvent.change(screen.getByLabelText('Text'), { target: { value: text } });
+        act(() => vi.advanceTimersByTime(200));
+      }
+      expect(status).toBeEmptyDOMElement();
+      act(() => vi.advanceTimersByTime(1000));
+      expect(status).toHaveTextContent('3 characters');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('counts only when the counter is shown', async () => {
+    const segment = vi.spyOn(Intl.Segmenter.prototype, 'segment');
+    try {
+      render(<TextArea label="Text" defaultValue="hello" />);
+      await userEvent.type(screen.getByLabelText('Text'), ' world');
+      expect(segment).not.toHaveBeenCalled();
+    } finally {
+      segment.mockRestore();
+    }
   });
 });

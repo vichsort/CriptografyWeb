@@ -54,4 +54,10 @@ describe('ListRow', () => {
     );
     expect(container.querySelector('svg')).toBeNull();
   });
+
+  it('keeps the selection tint while a selected row is pressed', () => {
+    inList(<ListRow title="Caesar" onSelect={() => {}} selected />);
+    const row = screen.getByRole('button', { name: /Caesar/ });
+    expect(row).toHaveClass('hover:bg-tint-weak', 'active:bg-tint-weak');
+  });
 });

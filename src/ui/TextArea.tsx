@@ -5,6 +5,7 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -23,8 +24,26 @@ type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 
 const defaultCount = (n: number) => `${n} ${n === 1 ? 'character' : 'characters'}`;
 
-/** Counts what a person sees as characters: an emoji is one, not two UTF-16 units. */
-const characterCount = (text: string) => Array.from(text).length;
+const graphemes =
+  typeof Intl !== 'undefined' && 'Segmenter' in Intl
+    ? new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+    : null;
+
+/**
+ * Counts what a person sees as characters: a joined emoji, a flag or a skin tone is one.
+ * Without Intl.Segmenter it falls back to code points.
+ */
+function characterCount(text: string): number {
+  const units: Iterator<unknown> = graphemes
+    ? graphemes.segment(text)[Symbol.iterator]()
+    : text[Symbol.iterator]();
+  let n = 0;
+  while (!units.next().done) n++;
+  return n;
+}
+
+/** How long typing must pause before a screen reader hears the new count. */
+const ANNOUNCE_DELAY_MS = 1000;
 
 /** A multi-line field that grows with its content. Whitespace is part of the value. */
 export function TextArea({
@@ -43,9 +62,25 @@ export function TextArea({
   const id = idProp ?? generated;
   const ref = useRef<HTMLTextAreaElement>(null);
   const [uncontrolledLength, setUncontrolledLength] = useState(() =>
-    characterCount(String(defaultValue ?? '')),
+    counter ? characterCount(String(defaultValue ?? '')) : 0,
   );
-  const count = value !== undefined ? characterCount(String(value)) : uncontrolledLength;
+  const controlledLength = useMemo(
+    () => (counter && value !== undefined ? characterCount(String(value)) : null),
+    [counter, value],
+  );
+  const count = controlledLength ?? uncontrolledLength;
+
+  // The visible count changes on every keystroke; the live region speaks once typing pauses.
+  const [announced, setAnnounced] = useState<number | null>(null);
+  const spoken = useRef(count);
+  useEffect(() => {
+    if (!counter || count === spoken.current) return;
+    const timer = setTimeout(() => {
+      spoken.current = count;
+      setAnnounced(count);
+    }, ANNOUNCE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [counter, count]);
 
   const grow = useCallback(() => {
     const el = ref.current;
@@ -75,7 +110,7 @@ export function TextArea({
   }, [grow]);
 
   const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    if (value === undefined) setUncontrolledLength(characterCount(event.target.value));
+    if (counter && value === undefined) setUncontrolledLength(characterCount(event.target.value));
     onChange?.(event);
     grow();
   };
@@ -104,8 +139,13 @@ export function TextArea({
       {showMeta && (
         <div className="mt-[6px] flex justify-between gap-3 text-caption text-label-tertiary">
           <span id={`${id}-note`}>{note}</span>
-          {counter && <span aria-live="polite">{formatCount(count)}</span>}
+          {counter && <span>{formatCount(count)}</span>}
         </div>
+      )}
+      {counter && (
+        <span role="status" className="sr-only">
+          {announced === null ? '' : formatCount(announced)}
+        </span>
       )}
     </div>
   );

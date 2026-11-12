@@ -33,7 +33,10 @@ export function SegmentedControl<T extends string>({
     const by = NEXT[event.key];
     if (by === undefined || options.length === 0) return;
     event.preventDefault();
-    const next = (tabStop + by + options.length) % options.length;
+    // Step from the focused segment: the value may not follow (no match, or a rejected change).
+    const focused = refs.current.findIndex((el) => el === event.target);
+    const from = focused === -1 ? tabStop : focused;
+    const next = (from + by + options.length) % options.length;
     const option = options[next];
     if (!option) return;
     onChange(option.value);

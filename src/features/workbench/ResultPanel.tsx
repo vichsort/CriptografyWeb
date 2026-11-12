@@ -9,9 +9,11 @@ const COPIED_FOR_MS = 1_400;
 /** The output in monospace, its length, Copy and, with two modes, Use as input. */
 export function ResultPanel({
   result,
+  title = workbench.result,
   onUseAsInput,
 }: {
   result: string;
+  title?: string;
   onUseAsInput?: (() => void) | undefined;
 }) {
   const [copied, setCopied] = useState(false);
@@ -30,7 +32,7 @@ export function ResultPanel({
   };
 
   return (
-    <GlassCard title={workbench.result} hint={workbench.characters(characterCount(result))}>
+    <GlassCard title={title} hint={workbench.characters(characterCount(result))}>
       <output className="block text-mono break-all whitespace-pre-wrap text-mono-text">
         {result}
       </output>

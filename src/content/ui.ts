@@ -63,6 +63,20 @@ export const workbench = {
   },
 } as const;
 
+/** The tool that hashes two texts and says whether they are the same. */
+export const compareHash = {
+  title: 'Compare two texts by hash',
+  description:
+    'Both texts are hashed with SHA-256. One changed character, even a trailing space, gives a completely different hash.',
+  textA: 'Text A',
+  textB: 'Text B',
+  compare: 'Compare',
+  comparing: 'Comparing…',
+  same: 'Same text: the hashes match.',
+  different: "Different texts: the hashes don't match.",
+  hashOf: (label: 'A' | 'B') => `SHA-256 of ${label}`,
+} as const;
+
 /** The fixed header, the sidebar frame and the mobile menu. */
 export const shell = {
   nav: [

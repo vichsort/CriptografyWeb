@@ -9,4 +9,4 @@ export { extras, type ExtraContent } from './extras';
 export { familyContent, type FamilyContent } from './families';
 export { joinCatalog, type CatalogEntry } from './join';
 export { operationCopy } from './operations';
-export { form, securityLevelCopy, shell, site, ui, workbench } from './ui';
+export { compareHash, form, securityLevelCopy, shell, site, ui, workbench } from './ui';

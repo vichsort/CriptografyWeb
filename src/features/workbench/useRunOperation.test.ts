@@ -21,14 +21,16 @@ const aes = (input: string): OperationRequest => ({
 function holdEncrypt() {
   let open = () => {};
   const opened = new Promise<void>((resolve) => (open = resolve));
+  const signals: AbortSignal[] = [];
   server.use(
     http.post(apiUrl('/api/encrypt'), async ({ request }) => {
+      signals.push(request.signal);
       const { input } = (await request.json()) as { input: string };
       await opened;
       return HttpResponse.json({ result: `out:${input}` });
     }),
   );
-  return open;
+  return Object.assign(open, { signals });
 }
 
 describe('useRunOperation', () => {
@@ -69,7 +71,7 @@ describe('useRunOperation', () => {
     expect(result.current).toMatchObject({ status: 'idle', error: null, result: null });
   });
 
-  it('ignores the settlement of a run that a newer one replaced', async () => {
+  it('running twice quickly aborts the first, and ignores its settlement', async () => {
     const open = holdEncrypt();
     const { result } = renderHook(() => useRunOperation(), { wrapper });
     let first: Promise<void> = Promise.resolve();
@@ -77,10 +79,13 @@ describe('useRunOperation', () => {
     act(() => {
       first = result.current.run(aes('one'));
     });
+    await waitFor(() => expect(open.signals).toHaveLength(1));
     act(() => {
       second = result.current.run(aes('two'));
     });
     const keyOfSecond = result.current.requestKey;
+    await waitFor(() => expect(open.signals).toHaveLength(2));
+    expect(open.signals[0]?.aborted).toBe(true);
     open();
     await act(() => Promise.all([first, second]));
     await waitFor(() => expect(result.current.status).toBe('success'));

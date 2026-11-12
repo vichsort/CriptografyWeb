@@ -52,12 +52,20 @@ function OptionField({ algorithmId, name, schema, copy, value, error, onChange }
       const matrix = Array.isArray(value) ? value : [];
       return (
         <MatrixEditor
-          {...shared}
+          label={label}
+          {...(help ? { help } : {})}
           value={matrix}
           min={widget.min}
           max={widget.max}
           onChange={onChange}
-          feedback={MOD_26_MATRIX.has(algorithmId) ? matrixFeedback(matrix) : null}
+          // MatrixEditor has one message line: an error takes the place of the feedback.
+          feedback={
+            error
+              ? { text: error, ok: false }
+              : MOD_26_MATRIX.has(algorithmId)
+                ? matrixFeedback(matrix)
+                : null
+          }
         />
       );
     }

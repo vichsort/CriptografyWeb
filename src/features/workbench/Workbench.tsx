@@ -19,6 +19,7 @@ import {
   useReducedMotionSafe,
 } from '@/ui';
 import { AlgorithmNotFound } from './AlgorithmNotFound';
+import { useCooling } from './cooldown';
 import { SchemaForm } from './form/SchemaForm';
 import { ResultPanel } from './ResultPanel';
 import { useRunOperation } from './useRunOperation';
@@ -46,6 +47,16 @@ function toneOf(error: AppError): Tone {
 
 function apiMessageOf(error: AppError): string | null {
   return 'message' in error ? error.message : null;
+}
+
+/** Shown while the cooldown of an earlier 429 lasts, even after that run's message is gone. */
+const RATE_LIMITED: AppError = { kind: 'rateLimited', message: '', retryAfterSeconds: null };
+
+/** The API's per-field messages for one field of the request (ARCHITECTURE.md §6). */
+function fieldError(error: AppError | null, field: 'input' | 'options'): string | null {
+  if (error?.kind !== 'validation') return null;
+  const messages = error.fields[field] ?? [];
+  return messages.length > 0 ? messages.join(' ') : null;
 }
 
 /** The column with a placeholder, while the route or the catalog is not known yet. */
@@ -85,6 +96,7 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
   const content = algorithmContent[algorithm.id];
   const state = useWorkbenchState(algorithm);
   const runner = useRunOperation();
+  const cooling = useCooling();
   const reduced = useReducedMotionSafe();
   const shortcut = useShortcutLabel();
   const { mode, options, input } = state;
@@ -92,9 +104,12 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
   const twoModes = algorithm.operations.length === 2;
   const hasOptions = Object.keys(algorithm.optionsSchema.properties).length > 0;
   const running = runner.status === 'running';
-  const canRun = mode !== undefined && options !== null && !runner.cooling;
+  const canRun = mode !== undefined && options !== null && !cooling;
 
   const start = () => {
+    // Run ignores presses while loading; the shortcut does the same, so it never sends twice.
+    if (running) return;
+    if (options === null) state.revealErrors();
     if (!canRun) return;
     void runner.run({
       algorithmId: algorithm.id,
@@ -123,9 +138,16 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
     start();
   };
 
-  const error = runner.status === 'error' ? runner.error : null;
+  const failure = runner.status === 'error' ? runner.error : null;
+  // The API no longer knows this algorithm: the catalog this screen came from is out of date.
+  if (failure?.kind === 'notFound') return <AlgorithmNotFound />;
+
+  const error = failure ?? (cooling ? RATE_LIMITED : null);
   const errorText = error && mode ? errorCopy(error, mode) : null;
-  const result = runner.status === 'success' ? runner.result : null;
+  const inputError = fieldError(failure, 'input');
+  const optionsError = fieldError(failure, 'options');
+  // The last result stays while the next run is pending, so a new one replaces it in place.
+  const result = runner.status === 'success' || running ? runner.result : null;
 
   const announcement =
     result !== null
@@ -178,6 +200,7 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
               onChange={state.setValues}
               errors={state.errors}
             />
+            {optionsError && <p className="mt-3 text-footnote text-danger">{optionsError}</p>}
           </GlassCard>
         )}
 
@@ -189,6 +212,8 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
             formatCount={workbench.characters}
             value={input}
             onChange={(event) => state.setInput(event.target.value)}
+            aria-invalid={inputError ? true : undefined}
+            {...(inputError && { note: inputError })}
           />
         </GlassCard>
 
@@ -221,7 +246,7 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
             </motion.div>
           )}
           {error && errorText && (
-            <motion.div key={`error-${runner.requestKey}`} {...appear} transition={appearTransition}>
+            <motion.div key={`error-${error.kind}`} {...appear} transition={appearTransition}>
               <InlineMessage
                 live={false}
                 tone={toneOf(error)}
@@ -235,7 +260,7 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
             <motion.div key="result" {...appear} transition={appearTransition}>
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
-                  key={runner.requestKey}
+                  key={result}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}

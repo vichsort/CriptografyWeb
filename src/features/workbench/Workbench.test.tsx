@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { MotionGlobalConfig } from 'motion/react';
@@ -183,11 +183,11 @@ describe('Workbench', () => {
     expect(await settledButton('Decode')).not.toHaveAttribute('aria-busy');
   });
 
-  it('running twice quickly aborts the first', async () => {
+  it('⌘/Ctrl+Enter while running does not send it again', async () => {
     const held = gate();
-    const sent = answer('/api/encrypt', async (_, hit) => {
-      if (hit === 1) await held.opened;
-      return HttpResponse.json({ result: hit === 1 ? 'first' : 'second' });
+    const sent = answer('/api/encrypt', async () => {
+      await held.opened;
+      return HttpResponse.json({ result: 'once' });
     });
     const user = await renderWorkbench('aes-256-gcm');
     await user.type(screen.getByLabelText('Password'), 'pw');
@@ -196,13 +196,29 @@ describe('Workbench', () => {
     await waitFor(() => expect(sent.signals).toHaveLength(1));
 
     await user.keyboard('{Control>}{Enter}{/Control}');
-    expect(await screen.findByText('second')).toBeInTheDocument();
-    expect(sent.signals[0]?.aborted).toBe(true);
+    await user.keyboard('{Control>}{Enter}{/Control}');
     held.open();
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(await screen.findByText('once')).toBeInTheDocument();
+    expect(sent.signals).toHaveLength(1);
+    expect(sent.signals[0]?.aborted).toBe(false);
+  });
+
+  it('keeps the last result on screen while the next run is pending', async () => {
+    const held = gate();
+    answer('/api/encode', async (body) => {
+      if (body.input === 'ho') await held.opened;
+      return HttpResponse.json({ result: body.input === 'hi' ? '6869' : '686f' });
     });
-    expect(screen.queryByText('first')).toBeNull();
+    const user = await renderWorkbench('hex');
+    await type(user, 'hi');
+    await user.click(runButton('Encode'));
+    await screen.findByText('6869');
+
+    await type(user, 'ho');
+    await user.click(runButton('Encode'));
+    expect(screen.getByText('6869')).toBeInTheDocument();
+    held.open();
+    expect(await screen.findByText('686f')).toBeInTheDocument();
   });
 
   it('identical deterministic re-run hits the API once', async () => {
@@ -287,6 +303,81 @@ describe('Workbench', () => {
     expect(runButton('Generate hash')).toBeEnabled();
   });
 
+  it('keeps the rate-limit message and the cooldown across a mode switch', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    answer('/api/encode', () =>
+      HttpResponse.json({ message: 'Too Many Attempts.' }, { status: 429 }),
+    );
+    const user = await renderWorkbench('hex', undefined, true);
+    await user.click(runButton('Encode'));
+    await screen.findByText('Wait a moment', title);
+
+    await user.click(screen.getByRole('radio', { name: 'Decode' }));
+    expect(screen.getByText('Wait a moment', title)).toBeInTheDocument();
+    expect(runButton('Decode')).toBeDisabled();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_100);
+    });
+    expect(runButton('Decode')).toBeEnabled();
+  });
+
+  it('keeps the cooldown on another algorithm, since the limit is per client', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    answer('/api/hash', () =>
+      HttpResponse.json({ message: 'Too Many Attempts.' }, { status: 429 }),
+    );
+    const user = await renderWorkbench('sha-256', undefined, true);
+    await user.click(runButton('Generate hash'));
+    await screen.findByText('Wait a moment', title);
+    cleanup();
+
+    await renderWorkbench('hex', undefined, true);
+    expect(runButton('Encode')).toBeDisabled();
+    expect(screen.getByText('Wait a moment', title)).toBeInTheDocument();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_100);
+    });
+    expect(runButton('Encode')).toBeEnabled();
+  });
+
+  it('a 404 from the API shows the not-found screen', async () => {
+    answer('/api/hash', () =>
+      HttpResponse.json({ message: messages.algorithmNotFound }, { status: 404 }),
+    );
+    const user = await renderWorkbench('sha-256');
+    await user.click(runButton('Generate hash'));
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Algorithm not found' }),
+    ).toBeInTheDocument();
+  });
+
+  it('marks the input when the API rejects it, and the options card for options', async () => {
+    answer('/api/encrypt', (body) =>
+      HttpResponse.json(
+        {
+          message: 'The given data was invalid.',
+          errors: body.input === 'bad'
+            ? { input: ['The input field must be a string.'] }
+            : { options: ['The options field must be an array.'] },
+        },
+        { status: 422 },
+      ),
+    );
+    const user = await renderWorkbench('caesar');
+    await user.type(screen.getByLabelText('Shift'), '3');
+    await type(user, 'bad');
+    await user.click(runButton('Encrypt'));
+    await waitFor(() => expect(input()).toHaveAttribute('aria-invalid', 'true'));
+    expect(input()).toHaveAccessibleDescription('The input field must be a string.');
+
+    await type(user, 'other');
+    await user.click(await settledButton('Encrypt'));
+    const options = screen.getByRole('region', { name: 'Options' });
+    expect(
+      await within(options).findByText('The options field must be an array.'),
+    ).toBeInTheDocument();
+  });
+
   it('slow response shows waking copy after 3s', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const held = gate();
@@ -361,6 +452,13 @@ describe('Workbench', () => {
     expect(screen.getByText('Enter a whole number, like 3 or -1.')).toBeInTheDocument();
     await user.type(screen.getByLabelText('Shift'), '1');
     expect(runButton('Encrypt')).toBeEnabled();
+  });
+
+  it('says why Run is off once the input is edited, even for an untouched option', async () => {
+    const user = await renderWorkbench('caesar');
+    await type(user, 'Veni');
+    expect(screen.getByText('Enter a whole number, like 3 or -1.')).toBeInTheDocument();
+    expect(runButton('Encrypt')).toBeDisabled();
   });
 
   it('unknown id after catalog loads renders not-found', async () => {

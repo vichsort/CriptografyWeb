@@ -4,6 +4,7 @@ import { hashKey, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { executeOperation } from '@/data/cache';
 import { isAppFailure, type AppError, type OperationRequest } from '@/domain';
+import { startCooldown } from './cooldown';
 
 type Status = 'idle' | 'running' | 'success' | 'error';
 
@@ -17,33 +18,21 @@ interface RunState {
 
 const IDLE: RunState = { status: 'idle', waking: false, result: null, error: null, requestKey: null };
 
-/** How long Run stays off after a 429 that does not say (Retry-After is not always exposed). */
-const DEFAULT_COOLDOWN_SECONDS = 60;
-
 /** What a failure that is not an AppFailure means to the screen: something went wrong. */
 const UNKNOWN: AppError = { kind: 'server', status: 0, message: null };
 
 /**
  * Runs one operation at a time. A new run aborts the pending one, and a settlement that arrives
  * for a run that is no longer current is dropped, so the screen never shows a stale result.
- * A cancelled run is never reported as an error. After a 429, `cooling` stays on until the
- * API's wait is over, even if the run is cancelled meanwhile.
+ * A cancelled run is never reported as an error. A 429 starts the shared cooldown.
  */
 export function useRunOperation() {
   const client = useQueryClient();
   const [state, setState] = useState<RunState>(IDLE);
   const current = useRef<AbortController | null>(null);
-  const [cooling, setCooling] = useState(false);
-  const cooldown = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Leaving the screen gives up the pending run.
-  useEffect(
-    () => () => {
-      current.current?.abort();
-      clearTimeout(cooldown.current);
-    },
-    [],
-  );
+  useEffect(() => () => current.current?.abort(), []);
 
   const run = useCallback(
     async (req: OperationRequest) => {
@@ -67,12 +56,7 @@ export function useRunOperation() {
         if (!isCurrent()) return;
         const error = isAppFailure(e) ? e.error : UNKNOWN;
         if (error.kind === 'aborted') return;
-        if (error.kind === 'rateLimited') {
-          setCooling(true);
-          clearTimeout(cooldown.current);
-          const seconds = error.retryAfterSeconds ?? DEFAULT_COOLDOWN_SECONDS;
-          cooldown.current = setTimeout(() => setCooling(false), seconds * 1_000);
-        }
+        if (error.kind === 'rateLimited') startCooldown(error.retryAfterSeconds);
         setState({ status: 'error', waking: false, result: null, error, requestKey });
       } finally {
         if (isCurrent()) current.current = null;
@@ -87,5 +71,5 @@ export function useRunOperation() {
     setState(IDLE);
   }, []);
 
-  return { ...state, cooling, run, cancel };
+  return { ...state, run, cancel };
 }

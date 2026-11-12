@@ -112,6 +112,17 @@ describe('SchemaForm', () => {
     expect(screen.getByText('det(K) = 9 · gcd(9, 26) = 1 ✓ invertible')).toBeInTheDocument();
   });
 
+  it('shows an error on the matrix in place of its feedback', async () => {
+    render(
+      <Harness
+        algorithmId="hill"
+        schema={await schemaOf('hill')}
+        errors={{ key: 'Must NOT have fewer than 2 items.' }}
+      />,
+    );
+    expect(screen.getByText('Must NOT have fewer than 2 items.')).toBeInTheDocument();
+  });
+
   it('renders the JSON fallback for a schema it does not know, with its error', () => {
     const schema: OptionsSchema = {
       type: 'object',

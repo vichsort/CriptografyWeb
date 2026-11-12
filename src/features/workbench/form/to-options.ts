@@ -1,21 +1,17 @@
 import { form } from '@/content';
 import type { OptionsSchema } from '@/domain';
+import { identityMatrix, parseWholeNumber } from '@/ui';
 import { resolveWidget } from './resolve-widget';
 import { validateOptions } from './validate';
 
 /** What the inputs hold: text as typed, or a matrix of integers. */
 export type FormValues = Record<string, string | number[][]>;
 
-const WHOLE_NUMBER = /^-?\d+$/;
-
-const identity = (size: number) =>
-  Array.from({ length: size }, (_, r) => Array.from({ length: size }, (_, c) => (r === c ? 1 : 0)));
-
 export function initialValues(schema: OptionsSchema): FormValues {
   const values: FormValues = {};
   for (const [key, property] of Object.entries(schema.properties)) {
     const widget = resolveWidget(property);
-    values[key] = widget.kind === 'matrix' ? identity(widget.min) : '';
+    values[key] = widget.kind === 'matrix' ? identityMatrix(widget.min) : '';
   }
   return values;
 }
@@ -36,10 +32,8 @@ function convert(
   if (text === '' && !required) return { omit: true };
   switch (widget.kind) {
     case 'integer': {
-      const n = Number(text);
-      return WHOLE_NUMBER.test(text) && Number.isSafeInteger(n)
-        ? { value: n }
-        : { error: form.wholeNumber };
+      const n = parseWholeNumber(text);
+      return n === null ? { error: form.wholeNumber } : { value: n };
     }
     case 'json':
       try {

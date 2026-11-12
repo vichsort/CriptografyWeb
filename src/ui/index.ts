@@ -25,6 +25,7 @@ export { ListRow } from './ListRow';
 export { MatrixEditor } from './MatrixEditor';
 export { MenuIcon } from './MenuIcon';
 export { durations, springs, useReducedMotionSafe } from './motion';
+export { identityMatrix, parseWholeNumber } from './numbers';
 export { NumberStepper } from './NumberStepper';
 export {
   PROGRESS_CEILING,

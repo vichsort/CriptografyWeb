@@ -2,6 +2,9 @@ import { Ajv, type ErrorObject, type ValidateFunction } from 'ajv';
 import { form } from '@/content';
 import type { OptionsSchema } from '@/domain';
 
+/** Where an error that names no option goes (a root keyword such as minProperties). */
+export const FORM_ERROR = '';
+
 /** The pattern of the Vigenère keyword, whose message the form spells out. */
 const LETTERS_ONLY = '^[A-Za-z]+$';
 
@@ -58,8 +61,8 @@ export function validateOptions(
   if (validate(options)) return {};
   const errors: Record<string, string> = {};
   for (const error of validate.errors ?? []) {
-    const option = optionOf(error);
-    if (option === null || option in errors) continue;
+    const option = optionOf(error) ?? FORM_ERROR;
+    if (option in errors) continue;
     const atRoot = error.instancePath.split('/').length === 2;
     errors[option] = messageFor(error, atRoot);
   }

@@ -6,6 +6,7 @@ import { cn } from './cn';
 import { describedBy, plainTextEntry } from './field';
 import { MinusIcon, PlusIcon } from './icons';
 import { durations, springs, useReducedMotionSafe } from './motion';
+import { identityMatrix, parseWholeNumber } from './numbers';
 
 interface MatrixEditorProps {
   label: string;
@@ -32,12 +33,9 @@ const defaultLabels = {
 
 /** Resizes to n×n, keeping the values that still fit and filling new cells from the identity. */
 function resizeMatrix(matrix: number[][], n: number): number[][] {
-  return Array.from({ length: n }, (_, r) =>
-    Array.from({ length: n }, (_, c) => matrix[r]?.[c] ?? (r === c ? 1 : 0)),
-  );
+  const identity = identityMatrix(n);
+  return identity.map((row, r) => row.map((one, c) => matrix[r]?.[c] ?? one));
 }
-
-const WHOLE = /^-?\d+$/;
 
 /**
  * The number a cell's text commits, or null while it stays a draft: text that is not a whole
@@ -45,9 +43,8 @@ const WHOLE = /^-?\d+$/;
  * to keep exact.
  */
 function wholeNumber(text: string): number | null {
-  if (!WHOLE.test(text)) return null;
-  const n = Number(text);
-  return Number.isSafeInteger(n) && !Object.is(n, -0) ? n : null;
+  const n = parseWholeNumber(text);
+  return n === null || Object.is(n, -0) ? null : n;
 }
 
 function without(drafts: Record<string, string>, key: string): Record<string, string> {

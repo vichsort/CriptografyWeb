@@ -14,6 +14,8 @@ export interface OptionCopy {
   label?: string;
   help?: string;
   secret?: boolean;
+  /** A matrix key checked mod 26: shows its determinant and whether it can be inverted. */
+  determinantFeedback?: boolean;
 }
 
 export interface AlgorithmContent {
@@ -61,6 +63,7 @@ export const algorithmContent: Readonly<Record<string, AlgorithmContent>> = {
       key: {
         label: 'Key matrix',
         help: 'Square, from 2×2 to 6×6. Its determinant must be coprime with 26 so the matrix can be inverted.',
+        determinantFeedback: true,
       },
     },
   },

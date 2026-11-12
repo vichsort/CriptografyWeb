@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { OptionsSchema } from '@/domain';
-import { validateOptions } from './validate';
+import { FORM_ERROR, validateOptions } from './validate';
 
 const schema = (properties: OptionsSchema['properties']): OptionsSchema => ({
   type: 'object',
@@ -43,6 +43,19 @@ describe('validateOptions', () => {
     expect(
       validateOptions(schema({ key: { type: 'string', minLength: 1 } }), { key: '' }),
     ).toEqual({ key: "This can't be empty." });
+  });
+
+  it('keeps an error that names no option, under the form-level key', () => {
+    const atLeastOne: OptionsSchema = {
+      type: 'object',
+      properties: { shift: { type: 'integer' } },
+      required: [],
+      additionalProperties: false,
+      minProperties: 1,
+    } as OptionsSchema;
+    const errors = validateOptions(atLeastOne, {});
+    expect(Object.keys(errors)).toEqual([FORM_ERROR]);
+    expect(errors[FORM_ERROR]).toMatch(/^[A-Z].*\.$/);
   });
 
   it('gives the same answer when the same schema arrives as a new object', () => {

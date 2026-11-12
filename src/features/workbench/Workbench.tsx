@@ -20,13 +20,13 @@ import {
 } from '@/ui';
 import { AlgorithmNotFound } from './AlgorithmNotFound';
 import { useCooling } from './cooldown';
+import { WORKBENCH_COLUMN } from './layout';
 import { SchemaForm } from './form/SchemaForm';
 import { ResultPanel } from './ResultPanel';
 import { useRunOperation } from './useRunOperation';
 import { useWorkbenchState } from './useWorkbenchState';
 import { WorkbenchHeader } from './WorkbenchHeader';
 
-const COLUMN = 'mx-auto w-full max-w-workbench px-4 pt-6 pb-12 sm:px-8 sm:pt-8 lg:px-10';
 
 const subscribeNever = () => () => {};
 const isApple = () => /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -49,6 +49,9 @@ function apiMessageOf(error: AppError): string | null {
   return 'message' in error ? error.message : null;
 }
 
+/** Failures that may pass if the same request is sent again (ARCHITECTURE.md §6). */
+const RETRYABLE = new Set<AppError['kind']>(['network', 'timeout', 'server', 'contract']);
+
 /** Shown while the cooldown of an earlier 429 lasts, even after that run's message is gone. */
 const RATE_LIMITED: AppError = { kind: 'rateLimited', message: '', retryAfterSeconds: null };
 
@@ -62,7 +65,7 @@ function fieldError(error: AppError | null, field: 'input' | 'options'): string 
 /** The column with a placeholder, while the route or the catalog is not known yet. */
 export function WorkbenchFallback({ waking = false }: { waking?: boolean }) {
   return (
-    <div className={`${COLUMN} space-y-4`}>
+    <div className={`${WORKBENCH_COLUMN} space-y-4`}>
       {waking && <InlineMessage tone="info" title={ui.waking.title} body={ui.waking.body} />}
       <Skeleton rows={3} />
     </div>
@@ -78,7 +81,7 @@ export function Workbench({ id }: { id: string }) {
     if (catalog.isError) {
       const copy = errorCopy(catalog.error.error);
       return (
-        <div className={COLUMN}>
+        <div className={WORKBENCH_COLUMN}>
           <InlineMessage tone="error" title={copy.title} body={copy.body} />
         </div>
       );
@@ -174,7 +177,7 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
       };
 
   return (
-    <div className={COLUMN} onKeyDown={onKeyDown}>
+    <div className={WORKBENCH_COLUMN} onKeyDown={onKeyDown}>
       <WorkbenchHeader algorithm={algorithm} />
 
       <div className="mt-6 space-y-4">
@@ -193,7 +196,6 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
         {hasOptions && (
           <GlassCard title={workbench.options}>
             <SchemaForm
-              algorithmId={algorithm.id}
               schema={algorithm.optionsSchema}
               copy={content?.options}
               values={state.values}
@@ -254,6 +256,13 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
                 body={errorText.body}
                 apiMessage={errorText.showApiMessage ? apiMessageOf(error) : null}
               />
+              {RETRYABLE.has(error.kind) && (
+                <div className="mt-2">
+                  <Button variant="tertiary" size="sm" onClick={start} disabled={!canRun}>
+                    {workbench.retry}
+                  </Button>
+                </div>
+              )}
             </motion.div>
           )}
           {result !== null && (

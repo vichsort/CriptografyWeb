@@ -23,7 +23,6 @@ function Harness({
   return (
     <>
       <SchemaForm
-        algorithmId={algorithmId}
         schema={schema}
         copy={algorithmContent[algorithmId]?.options}
         values={values}
@@ -123,6 +122,42 @@ describe('SchemaForm', () => {
     expect(screen.getByText('Must NOT have fewer than 2 items.')).toBeInTheDocument();
   });
 
+  it('shows an error that names no option under the form', async () => {
+    render(
+      <Harness
+        algorithmId="caesar"
+        schema={await schemaOf('caesar')}
+        errors={{ '': 'Must NOT have fewer than 1 properties.' }}
+      />,
+    );
+    expect(screen.getByText('Must NOT have fewer than 1 properties.')).toBeInTheDocument();
+  });
+
+  it('shows the determinant feedback only when the copy asks for it', async () => {
+    const hill = await schemaOf('hill');
+    const { unmount } = render(
+      <SchemaForm
+        schema={hill}
+        copy={algorithmContent.hill?.options}
+        values={initialValues(hill)}
+        onChange={() => {}}
+        errors={{}}
+      />,
+    );
+    expect(screen.getByText(/^det\(K\) = 1/)).toBeInTheDocument();
+    unmount();
+
+    render(
+      <SchemaForm
+        schema={hill}
+        values={initialValues(hill)}
+        onChange={() => {}}
+        errors={{}}
+      />,
+    );
+    expect(screen.queryByText(/^det\(K\)/)).toBeNull();
+  });
+
   it('renders the JSON fallback for a schema it does not know, with its error', () => {
     const schema: OptionsSchema = {
       type: 'object',
@@ -140,7 +175,6 @@ describe('SchemaForm', () => {
   it('renders nothing for a schema without options', async () => {
     const { container } = render(
       <SchemaForm
-        algorithmId="sha-256"
         schema={await schemaOf('sha-256')}
         values={{}}
         onChange={() => {}}

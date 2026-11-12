@@ -54,6 +54,7 @@ export const workbench = {
   copy: 'Copy',
   copied: 'Copied ✓',
   useAsInput: 'Use as input',
+  retry: 'Try again',
   shortcut: { apple: '⌘ Enter', other: 'Ctrl Enter' },
   notFound: {
     title: 'Algorithm not found',

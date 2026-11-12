@@ -378,6 +378,33 @@ describe('Workbench', () => {
     ).toBeInTheDocument();
   });
 
+  it('offers to try again after a network failure', async () => {
+    let calls = 0;
+    server.use(
+      http.post(apiUrl('/api/hash'), () => {
+        calls++;
+        return calls <= 2 ? HttpResponse.error() : HttpResponse.json({ result: 'back' });
+      }),
+    );
+    const user = await renderWorkbench('sha-256');
+    await user.click(runButton('Generate hash'));
+    expect(await screen.findByText("Can't reach the server", title)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByText('back')).toBeInTheDocument();
+  });
+
+  it('offers no retry for an error the same request would repeat', async () => {
+    answer('/api/decode', () =>
+      HttpResponse.json({ message: messages.invalidHex }, { status: 422 }),
+    );
+    const user = await renderWorkbench('hex', '/algorithms/hex?mode=decode');
+    await type(user, 'zz');
+    await user.click(runButton('Decode'));
+    await screen.findByText("Couldn't decode", title);
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+  });
+
   it('slow response shows waking copy after 3s', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const held = gate();

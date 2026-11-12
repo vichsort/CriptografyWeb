@@ -1,10 +1,17 @@
 import Link from 'next/link';
-import { workbench } from '@/content';
+import { site, workbench } from '@/content';
+import { WORKBENCH_COLUMN } from './layout';
 
-/** What an unknown algorithm address shows, inside the same column as the workbench. */
+/**
+ * What an unknown algorithm address shows, inside the same column as the workbench. The catalog
+ * is known only in the browser, so the page cannot answer 404; React hoists the title and the
+ * noindex meta into the head instead.
+ */
 export function AlgorithmNotFound() {
   return (
-    <div className="mx-auto w-full max-w-workbench px-4 pt-6 pb-12 sm:px-8 sm:pt-8 lg:px-10">
+    <div className={WORKBENCH_COLUMN}>
+      <title>{`${workbench.notFound.title} · ${site.name}`}</title>
+      <meta name="robots" content="noindex" />
       <h1 className="mt-1 text-large-title text-label">{workbench.notFound.title}</h1>
       <p className="mt-3 max-w-prose text-body text-label-secondary">{workbench.notFound.body}</p>
       <Link

@@ -43,4 +43,13 @@ describe('Accordion', () => {
     const { container } = render(<Family />);
     expect(container.firstElementChild).toHaveClass('material-glass-regular');
   });
+
+  it('names its button with the title and the count as separate words', () => {
+    render(
+      <Accordion title="Encrypt" count={4} open={false} onOpenChange={() => {}}>
+        rows
+      </Accordion>,
+    );
+    expect(screen.getByRole('button')).toHaveAccessibleName('Encrypt 4');
+  });
 });

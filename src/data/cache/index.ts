@@ -1,5 +1,10 @@
 export { pingApi } from '@/data/http';
-export { catalogQueryOptions, useCatalog } from './catalog';
+export {
+  CATALOG_WAKING_AFTER_MS,
+  catalogQueryOptions,
+  useCatalog,
+  useCatalogWaking,
+} from './catalog';
 export { useInFlight } from './in-flight';
 export { queryKeys } from './keys';
 export { executeOperation } from './operations';

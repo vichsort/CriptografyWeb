@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { site } from '@/content/ui';
-import { AppShell, Providers } from '@/features/shell';
+import { AppShell, Providers, Sidebar } from '@/features/shell';
 import { fontVariables } from '@/ui/fonts';
 import { sidebarScript } from '@/ui/sidebar-script';
 import { THEME_COLORS, themeScript } from '@/ui/theme-script';
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       </head>
       <body className="app-background flex flex-col">
         <Providers>
-          <AppShell sidebar={null}>{children}</AppShell>
+          <AppShell sidebar={<Sidebar />}>{children}</AppShell>
         </Providers>
       </body>
     </html>

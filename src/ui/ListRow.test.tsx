@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { AnimatePresence } from 'motion/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ListRow } from './ListRow';
 
@@ -59,5 +60,40 @@ describe('ListRow', () => {
     inList(<ListRow title="Caesar" onSelect={() => {}} selected />);
     const row = screen.getByRole('button', { name: /Caesar/ });
     expect(row).toHaveClass('hover:bg-tint-weak', 'active:bg-tint-weak');
+  });
+
+  it('with href and onSelect, a click follows the link and calls onSelect', async () => {
+    const onSelect = vi.fn();
+    inList(<ListRow title="Caesar" href="/a" onSelect={onSelect} />);
+    await userEvent.click(screen.getByRole('link', { name: /Caesar/ }));
+    expect(onSelect).toHaveBeenCalledOnce();
+  });
+
+  it('compact rows are rounded, without the inset separator', () => {
+    const { container, rerender } = inList(<ListRow title="Caesar" href="/a" />);
+    expect(container.querySelector('.border-b')).not.toBeNull();
+    rerender(
+      <ul>
+        <ListRow title="Caesar" href="/a" density="compact" />
+      </ul>,
+    );
+    expect(container.querySelector('.border-b')).toBeNull();
+    expect(screen.getByRole('link', { name: /Caesar/ })).toHaveClass('rounded-[9px]');
+  });
+
+  it('animated rows leave through AnimatePresence instead of vanishing', async () => {
+    const list = (rows: string[]) => (
+      <ul>
+        <AnimatePresence initial={false}>
+          {rows.map((r) => (
+            <ListRow key={r} title={r} href={`/${r}`} animated />
+          ))}
+        </AnimatePresence>
+      </ul>
+    );
+    const { rerender } = render(list(['Caesar', 'Hill']));
+    rerender(list(['Caesar']));
+    expect(screen.getByRole('link', { name: /Hill/ })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('link', { name: /Hill/ })).toBeNull());
   });
 });

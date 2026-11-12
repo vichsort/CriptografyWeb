@@ -32,6 +32,7 @@ export const shell = {
   closeMenu: 'Close menu',
   menuLabel: 'Menu',
   home: 'Home',
+  noMatches: (query: string) => `Nothing for “${query}”.`,
   theme: { light: 'Light', dark: 'Dark', useSystem: 'Use system setting' },
 } as const;
 

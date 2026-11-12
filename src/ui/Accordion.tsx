@@ -31,6 +31,8 @@ export function Accordion({ title, count, open, onOpenChange, children }: Accord
         className="flex w-full cursor-pointer items-center gap-2 px-3 py-[10px] text-left text-label focus-visible:-outline-offset-2"
       >
         <span className="min-w-0 flex-1 truncate text-callout font-semibold">{title}</span>
+        {/* Keeps the title and the count apart in the accessible name; flex drops it from layout. */}
+        {count !== undefined && ' '}
         {count !== undefined && (
           <span className="font-mono text-[0.65625rem] text-label-tertiary">{count}</span>
         )}

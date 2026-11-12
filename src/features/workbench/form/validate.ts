@@ -40,7 +40,8 @@ function messageFor(error: ErrorObject, atRoot: boolean): string {
     case 'required':
       return form.required;
     case 'type':
-      if (atRoot && (params.type === 'integer' || params.type === 'number')) return form.wholeNumber;
+      if (atRoot && (params.type === 'integer' || params.type === 'number'))
+        return form.wholeNumber;
       break;
     case 'pattern':
       return params.pattern === LETTERS_ONLY ? form.lettersOnly : form.mismatch;

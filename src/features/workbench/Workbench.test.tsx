@@ -356,9 +356,10 @@ describe('Workbench', () => {
       HttpResponse.json(
         {
           message: 'The given data was invalid.',
-          errors: body.input === 'bad'
-            ? { input: ['The input field must be a string.'] }
-            : { options: ['The options field must be an array.'] },
+          errors:
+            body.input === 'bad'
+              ? { input: ['The input field must be a string.'] }
+              : { options: ['The options field must be an array.'] },
         },
         { status: 422 },
       ),

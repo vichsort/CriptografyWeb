@@ -34,8 +34,8 @@ export function EncodingIsNotEncryption() {
       <P>
         Encoding rewrites data so it can travel where raw bytes can&apos;t: inside an email, a URL
         or a JSON document. Base64 and hex are encodings. There is no key and no secret: the rules
-        are public, and anyone can reverse them in a second. <Code>Hello</Code> in Base64 is
-        always <Code>SGVsbG8=</Code>, for everyone.
+        are public, and anyone can reverse them in a second. <Code>Hello</Code> in Base64 is always{' '}
+        <Code>SGVsbG8=</Code>, for everyone.
       </P>
       <P>
         Try it: <Try href="/algorithms/base64">encode something with Base64</Try>, then press
@@ -50,23 +50,23 @@ export function EncodingIsNotEncryption() {
         fails instead of returning garbage.
       </P>
       <P>
-        Try it: <Try href="/algorithms/aes-256-gcm">encrypt a sentence with AES-256-GCM</Try>,
-        then decrypt it with a different password. It refuses.
+        Try it: <Try href="/algorithms/aes-256-gcm">encrypt a sentence with AES-256-GCM</Try>, then
+        decrypt it with a different password. It refuses.
       </P>
 
       <H2>Hashing is one-way</H2>
       <P>
         A hash such as SHA-256 turns any text into a fixed-size fingerprint. The same text always
-        gives the same fingerprint, a tiny change gives a completely different one, and there is
-        no way back to the text. That makes hashes good for checking that two things are equal,
-        not for keeping secrets you need to read again.
+        gives the same fingerprint, a tiny change gives a completely different one, and there is no
+        way back to the text. That makes hashes good for checking that two things are equal, not for
+        keeping secrets you need to read again.
       </P>
 
       <H2>The short version</H2>
       <P>
-        Encoding is for transport and anyone can undo it. Encryption is for secrecy and needs a
-        key. Hashing is for fingerprints and nobody can undo it. If something only looks
-        scrambled, ask which of the three it is before you trust it with a secret.
+        Encoding is for transport and anyone can undo it. Encryption is for secrecy and needs a key.
+        Hashing is for fingerprints and nobody can undo it. If something only looks scrambled, ask
+        which of the three it is before you trust it with a secret.
       </P>
     </>
   );

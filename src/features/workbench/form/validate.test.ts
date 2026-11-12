@@ -40,9 +40,9 @@ describe('validateOptions', () => {
     expect(
       validateOptions(schema({ key: { type: 'string', pattern: '^[A-Za-z]+$' } }), { key: 'a b' }),
     ).toEqual({ key: 'Letters A–Z only, no spaces or accents.' });
-    expect(
-      validateOptions(schema({ key: { type: 'string', minLength: 1 } }), { key: '' }),
-    ).toEqual({ key: "This can't be empty." });
+    expect(validateOptions(schema({ key: { type: 'string', minLength: 1 } }), { key: '' })).toEqual(
+      { key: "This can't be empty." },
+    );
   });
 
   it('keeps an error that names no option, under the form-level key', () => {

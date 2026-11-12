@@ -9,5 +9,7 @@ export function parseWholeNumber(text: string): number | null {
 
 /** The n×n identity matrix. */
 export function identityMatrix(n: number): number[][] {
-  return Array.from({ length: n }, (_, r) => Array.from({ length: n }, (_, c) => (r === c ? 1 : 0)));
+  return Array.from({ length: n }, (_, r) =>
+    Array.from({ length: n }, (_, c) => (r === c ? 1 : 0)),
+  );
 }

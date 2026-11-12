@@ -7,14 +7,7 @@ import { compareHash, errorCopy, ui, workbench } from '@/content';
 import { executeOperation } from '@/data/cache';
 import { isAppFailure, type AppError } from '@/domain';
 import { ResultPanel, startCooldown, useCooling } from '@/features/workbench';
-import {
-  ActivityIndicator,
-  Button,
-  durations,
-  GlassCard,
-  InlineMessage,
-  TextArea,
-} from '@/ui';
+import { ActivityIndicator, Button, durations, GlassCard, InlineMessage, TextArea } from '@/ui';
 
 type Outcome =
   | { kind: 'idle' }
@@ -88,7 +81,8 @@ export function CompareHash() {
   };
 
   const same = outcome.kind === 'done' && outcome.a === outcome.b;
-  const verdict = outcome.kind === 'done' ? (same ? compareHash.same : compareHash.different) : null;
+  const verdict =
+    outcome.kind === 'done' ? (same ? compareHash.same : compareHash.different) : null;
   const failure = outcome.kind === 'failed' ? errorCopy(outcome.error, 'hash') : null;
   const announcement = verdict ?? failure?.title ?? '';
 

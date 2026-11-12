@@ -10,7 +10,11 @@ describe('Article', () => {
       screen.getByRole('heading', { level: 1, name: 'Encoding is not encryption' }),
     ).toBeInTheDocument();
     expect(screen.getByText('2 min read')).toBeInTheDocument();
-    for (const level2 of ['Encoding changes the form', 'Encryption needs a key', 'Hashing is one-way']) {
+    for (const level2 of [
+      'Encoding changes the form',
+      'Encryption needs a key',
+      'Hashing is one-way',
+    ]) {
       expect(screen.getByRole('heading', { level: 2, name: level2 })).toBeInTheDocument();
     }
     expect(screen.getByRole('link', { name: /Base64/ })).toHaveAttribute(

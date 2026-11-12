@@ -16,7 +16,13 @@ interface RunState {
   requestKey: string | null;
 }
 
-const IDLE: RunState = { status: 'idle', waking: false, result: null, error: null, requestKey: null };
+const IDLE: RunState = {
+  status: 'idle',
+  waking: false,
+  result: null,
+  error: null,
+  requestKey: null,
+};
 
 /** What a failure that is not an AppFailure means to the screen: something went wrong. */
 const UNKNOWN: AppError = { kind: 'server', status: 0, message: null };

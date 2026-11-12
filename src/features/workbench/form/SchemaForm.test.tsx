@@ -148,12 +148,7 @@ describe('SchemaForm', () => {
     unmount();
 
     render(
-      <SchemaForm
-        schema={hill}
-        values={initialValues(hill)}
-        onChange={() => {}}
-        errors={{}}
-      />,
+      <SchemaForm schema={hill} values={initialValues(hill)} onChange={() => {}} errors={{}} />,
     );
     expect(screen.queryByText(/^det\(K\)/)).toBeNull();
   });
@@ -174,12 +169,7 @@ describe('SchemaForm', () => {
 
   it('renders nothing for a schema without options', async () => {
     const { container } = render(
-      <SchemaForm
-        schema={await schemaOf('sha-256')}
-        values={{}}
-        onChange={() => {}}
-        errors={{}}
-      />,
+      <SchemaForm schema={await schemaOf('sha-256')} values={{}} onChange={() => {}} errors={{}} />,
     );
     expect(container).toBeEmptyDOMElement();
   });

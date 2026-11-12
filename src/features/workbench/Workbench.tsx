@@ -27,7 +27,6 @@ import { useRunOperation } from './useRunOperation';
 import { useWorkbenchState } from './useWorkbenchState';
 import { WorkbenchHeader } from './WorkbenchHeader';
 
-
 const subscribeNever = () => () => {};
 const isApple = () => /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
 

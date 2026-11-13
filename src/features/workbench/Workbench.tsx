@@ -17,6 +17,7 @@ import {
   Skeleton,
   springs,
   TextArea,
+  useKeepFieldInView,
   useReducedMotionSafe,
 } from '@/ui';
 import { AlgorithmNotFound } from './AlgorithmNotFound';
@@ -87,6 +88,7 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
   const cooling = useCooling();
   const reduced = useReducedMotionSafe();
   const shortcut = useShortcutLabel();
+  const keepFieldInView = useKeepFieldInView();
   const { mode, options, input } = state;
 
   const twoModes = algorithm.operations.length === 2;
@@ -162,7 +164,7 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
       };
 
   return (
-    <div className={pageColumn} onKeyDown={onKeyDown}>
+    <div className={pageColumn} onKeyDown={onKeyDown} onFocus={keepFieldInView}>
       <WorkbenchHeader algorithm={algorithm} />
 
       <div className="mt-6 space-y-4">
@@ -197,6 +199,8 @@ function WorkbenchScreen({ algorithm }: { algorithm: Algorithm }) {
             labelHidden
             counter
             formatCount={workbench.characters}
+            // Enter adds a line (whitespace is data); Run is ⌘/Ctrl+Enter.
+            enterKeyHint="enter"
             value={input}
             onChange={(event) => state.setInput(event.target.value)}
             aria-invalid={inputError ? true : undefined}

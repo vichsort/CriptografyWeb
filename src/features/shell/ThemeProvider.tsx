@@ -62,10 +62,18 @@ function applyTheme(preference: ThemePreference) {
   });
 }
 
-/** Crossfades the change when the browser supports view transitions. */
+/**
+ * Crossfades the change when the browser supports view transitions. The document is marked while
+ * it runs, so the whole page crossfades as one picture (ui/transitions.css): React can leave a
+ * route transition's name on a page that Next kept for back and forward, which would otherwise
+ * play the route animation here.
+ */
 function withViewTransition(update: () => void) {
-  if (typeof document.startViewTransition === 'function') document.startViewTransition(update);
-  else update();
+  if (typeof document.startViewTransition !== 'function') return update();
+  const root = document.documentElement;
+  root.dataset.themeSwitch = '';
+  const unmark = () => delete root.dataset.themeSwitch;
+  document.startViewTransition(update).finished.then(unmark, unmark);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

@@ -7,6 +7,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { createQueryClient } from '@/data/cache';
 import { messages } from '@/test/fixtures/messages';
 import { apiUrl, server } from '@/test/msw/server';
+import { stubMatchMedia } from '@/test/match-media';
 import { setUrl } from '@/test/next-navigation';
 import { Workbench } from './Workbench';
 
@@ -511,5 +512,72 @@ describe('Workbench', () => {
     expect(screen.getByText('5 characters')).toBeInTheDocument();
     fireEvent.change(input(), { target: { value: '' } });
     expect(screen.getByText('0 characters')).toBeInTheDocument();
+  });
+
+  it('the main input keeps Enter for new lines and is never corrected', async () => {
+    await renderWorkbench('sha-256');
+    // Enter adds a line (whitespace is data); Run is ⌘/Ctrl+Enter, so the key promises no action.
+    expect(input()).toHaveAttribute('enterkeyhint', 'enter');
+    expect(input()).toHaveAttribute('autocapitalize', 'off');
+    expect(input()).toHaveAttribute('autocorrect', 'off');
+    expect(input()).toHaveAttribute('spellcheck', 'false');
+  });
+
+  describe('with the on-screen keyboard', () => {
+    const scrollIntoView = vi.fn();
+    beforeAll(() => {
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+    afterAll(() => {
+      delete (Element.prototype as Partial<Element>).scrollIntoView;
+    });
+    afterEach(() => {
+      scrollIntoView.mockClear();
+      vi.unstubAllGlobals();
+    });
+
+    async function focusAndWait(field: HTMLElement) {
+      act(() => field.focus());
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_000);
+      });
+    }
+
+    it('scrolls a focused field into view on a touch screen, so Run and the result stay visible', async () => {
+      stubMatchMedia({ '(pointer: coarse)': true });
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      await renderWorkbench('caesar', undefined, true);
+
+      await focusAndWait(input());
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView.mock.contexts[0]).toBe(input());
+      expect(scrollIntoView).toHaveBeenCalledWith(expect.objectContaining({ block: 'start' }));
+
+      await focusAndWait(screen.getByLabelText('Shift'));
+      expect(scrollIntoView).toHaveBeenCalledTimes(2);
+      expect(scrollIntoView.mock.contexts[1]).toBe(screen.getByLabelText('Shift'));
+    });
+
+    it('leaves the page alone when the field loses focus before the keyboard is up', async () => {
+      stubMatchMedia({ '(pointer: coarse)': true });
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      await renderWorkbench('sha-256', undefined, true);
+
+      act(() => input().focus());
+      act(() => input().blur());
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_000);
+      });
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+
+    it('leaves the page alone with a mouse and a physical keyboard', async () => {
+      stubMatchMedia({ '(pointer: coarse)': false });
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      await renderWorkbench('sha-256', undefined, true);
+
+      await focusAndWait(input());
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
   });
 });

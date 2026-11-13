@@ -29,6 +29,7 @@ export { NotFoundView } from './NotFoundView';
 export { durations, springs, useReducedMotionSafe } from './motion';
 export { identityMatrix, parseWholeNumber } from './numbers';
 export { NumberStepper } from './NumberStepper';
+export { PageTransition } from './PageTransition';
 export {
   PROGRESS_CEILING,
   PROGRESS_SHOW_DELAY_MS,
@@ -44,3 +45,4 @@ export { TextField } from './TextField';
 export { THEME_COLORS, THEME_STORAGE_KEY, themeScript } from './theme-script';
 export { ThemeToggle } from './ThemeToggle';
 export { TopProgressBar } from './TopProgressBar';
+export { useKeepFieldInView } from './useKeepFieldInView';

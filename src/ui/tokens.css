@@ -97,15 +97,15 @@
   --color-current: currentColor;
   --color-label: #1d1d1f;
   --color-label-secondary: #5e5e63;
-  --color-label-tertiary: #6e6e73;
+  --color-label-tertiary: #626267;
   --color-label-inverse: #ffffff;
   --color-separator: rgb(60 60 67 / 0.16);
   --color-fill: rgb(118 118 128 / 0.12);
   --color-tint: #0071e3;
   --color-tint-weak: rgb(0 113 227 / 0.12);
-  --color-tint-text: #0060d0;
+  --color-tint-text: #005cc8;
   --color-on-tint: #ffffff;
-  --color-success: #248a3d;
+  --color-success: #1d7534;
   --color-warning: #ff9f0a;
   --color-warning-weak: rgb(255 159 10 / 0.13);
   --color-warning-text: #985200;
@@ -192,8 +192,8 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
   --color-label: #f5f5f7;
-  --color-label-secondary: #a1a1a6;
-  --color-label-tertiary: #8e8e93;
+  --color-label-secondary: #acacb1;
+  --color-label-tertiary: #9c9ca1;
   --color-label-inverse: #1d1d1f;
   --color-separator: rgb(84 84 88 / 0.45);
   --color-fill: rgb(118 118 128 / 0.22);
@@ -234,8 +234,8 @@
   :root:not([data-theme]) {
     color-scheme: dark;
     --color-label: #f5f5f7;
-    --color-label-secondary: #a1a1a6;
-    --color-label-tertiary: #8e8e93;
+    --color-label-secondary: #acacb1;
+    --color-label-tertiary: #9c9ca1;
     --color-label-inverse: #1d1d1f;
     --color-separator: rgb(84 84 88 / 0.45);
     --color-fill: rgb(118 118 128 / 0.22);

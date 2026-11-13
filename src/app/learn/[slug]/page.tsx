@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { articles } from '@/content';
 import { Article, articleBySlug } from '@/features/learn';
+import { PageTransition } from '@/ui';
 
 type Props = PageProps<'/learn/[slug]'>;
 
@@ -15,5 +16,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params;
-  return <Article slug={slug} />;
+  return (
+    <PageTransition>
+      <Article slug={slug} />
+    </PageTransition>
+  );
 }

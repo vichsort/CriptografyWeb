@@ -91,12 +91,38 @@ describe('ThemeProvider', () => {
 
   it('switches through a view transition when the browser has one', () => {
     stubMatchMedia({ [DARK]: false });
-    const start = vi.fn((update: () => void) => update());
+    const start = vi.fn((update: () => void) => {
+      update();
+      return { finished: Promise.resolve() };
+    });
     Object.assign(document, { startViewTransition: start });
     const { result } = renderHook(() => useTheme(), { wrapper });
     act(() => result.current.toggle());
     expect(start).toHaveBeenCalledOnce();
     expect(document.documentElement.dataset.theme).toBe('dark');
+    delete (document as { startViewTransition?: unknown }).startViewTransition;
+  });
+
+  it('marks the document while the theme crossfades, so the page is one picture with it', async () => {
+    stubMatchMedia({ [DARK]: false });
+    let finish = () => {};
+    const finished = new Promise<void>((resolve) => (finish = resolve));
+    const marks: (string | undefined)[] = [];
+    const start = vi.fn((update: () => void) => {
+      marks.push(document.documentElement.dataset.themeSwitch);
+      update();
+      return { finished };
+    });
+    Object.assign(document, { startViewTransition: start });
+    const { result } = renderHook(() => useTheme(), { wrapper });
+
+    act(() => result.current.toggle());
+    // Set before the old picture is taken, and kept until the crossfade ends.
+    expect(marks).toEqual(['']);
+    expect(document.documentElement.dataset.themeSwitch).toBe('');
+
+    await act(async () => finish());
+    expect(document.documentElement.dataset.themeSwitch).toBeUndefined();
     delete (document as { startViewTransition?: unknown }).startViewTransition;
   });
 

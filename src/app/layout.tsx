@@ -9,6 +9,8 @@ import './globals.css';
 export const metadata: Metadata = {
   title: { default: site.name, template: `%s · ${site.name}` },
   description: site.description,
+  // The name under the home screen icon on iOS, and the status bar over the light chrome.
+  appleWebApp: { title: site.name, statusBarStyle: 'default' },
 };
 
 export const viewport: Viewport = {

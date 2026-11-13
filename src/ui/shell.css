@@ -26,9 +26,28 @@
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+/* Anything scrolled into view (a focused field, an anchor) stops below the fixed header. */
+@layer base {
+  html {
+    scroll-padding-top: calc(
+      var(--spacing-header) + env(safe-area-inset-top, 0px) + var(--spacing-4)
+    );
+  }
+}
+
 /* Bottom padding that clears the home indicator, on top of a regular gutter. */
 @utility pb-safe-8 {
   padding-bottom: calc(var(--spacing-8) + env(safe-area-inset-bottom, 0px));
+}
+
+/* The main column clears the notch in landscape and the home indicator at the end of a page. */
+@utility px-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Side gutters that clear the notch in landscape. */

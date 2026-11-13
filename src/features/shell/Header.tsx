@@ -15,7 +15,7 @@ export function Header({ menuButtonRef }: { menuButtonRef: RefObject<HTMLButtonE
   const { collapsed, setCollapsed, mobileOpen, setMobileOpen } = useSidebarState();
 
   return (
-    <header className="material-chrome fixed inset-x-0 top-0 z-40 h-header-safe border-b border-separator pt-safe">
+    <header className="material-chrome vt-header fixed inset-x-0 top-0 z-40 h-header-safe border-b border-separator pt-safe">
       <div className="flex h-header items-center gap-3 px-safe-4">
         <button
           type="button"

@@ -23,7 +23,7 @@ export function AppShell({ sidebar, children }: { sidebar: ReactNode; children: 
       <SidebarFrame sidebar={sidebar} menuButtonRef={menuButtonRef} />
       <main
         inert={state.mobileOpen}
-        className="flex min-w-0 flex-1 flex-col pt-header-safe transition-padding motion-reduce:transition-none lg:pl-sidebar lg:sidebar-collapsed:pl-0"
+        className="flex min-w-0 flex-1 flex-col px-safe pt-header-safe pb-safe transition-padding motion-reduce:transition-none lg:pl-sidebar lg:sidebar-collapsed:pl-0"
       >
         {children}
       </main>

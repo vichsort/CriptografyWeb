@@ -1,0 +1,76 @@
+/*
+ * Route transitions (docs/DESIGN.md §7). Every page sits in a PageTransition, a React
+ * <ViewTransition> whose enter and exit class is `page`: on a route change the old page fades out
+ * and the new one fades in while rising slightly. Under reduced motion only the crossfade is left.
+ */
+
+::view-transition-old(.page) {
+  animation: var(--duration-fast) var(--ease-standard) both page-fade-out;
+}
+
+::view-transition-new(.page) {
+  animation:
+    var(--duration-base) var(--ease-standard) var(--duration-instant) both page-fade-in,
+    var(--duration-slow) var(--ease-spring) both page-rise;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-new(.page) {
+    animation: var(--duration-base) var(--ease-standard) both page-fade-in;
+  }
+}
+
+/*
+ * The header and the progress bar stay put, drawn above the pages while they swap: a page that
+ * was scrolled under the header would otherwise cover it until its picture fades.
+ */
+@utility vt-header {
+  view-transition-name: app-header;
+}
+
+@utility vt-progress {
+  view-transition-name: app-progress;
+}
+
+::view-transition-group(app-header),
+::view-transition-group(app-progress),
+::view-transition-new(app-header),
+::view-transition-new(app-progress) {
+  animation: none;
+}
+
+::view-transition-old(app-header),
+::view-transition-old(app-progress) {
+  display: none;
+}
+
+/*
+ * The theme crossfade (features/shell ThemeProvider) is one picture of the whole page, without the
+ * names above or any React may have left on a page Next kept for back and forward.
+ */
+:root[data-theme-switch] body * {
+  view-transition-name: none !important;
+}
+
+/* Clicks during the animation reach the new page instead of the transition overlay. */
+::view-transition {
+  pointer-events: none;
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes page-rise {
+  from {
+    transform: translateY(var(--spacing-2));
+  }
+}

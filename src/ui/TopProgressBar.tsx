@@ -63,7 +63,7 @@ export function TopProgressBar({ active }: { active: boolean }) {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-x-0 z-50 h-[2.5px]"
+      className="vt-progress pointer-events-none fixed inset-x-0 z-50 h-[2.5px]"
       style={{ top: 'calc(var(--spacing-header) + env(safe-area-inset-top, 0px))' }}
     >
       {isProgressVisible(state) && (

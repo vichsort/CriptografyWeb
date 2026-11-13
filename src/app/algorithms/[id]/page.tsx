@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { algorithmContent } from '@/content';
 import { Workbench, WorkbenchFallback } from '@/features/workbench';
+import { PageTransition } from '@/ui';
 
 type Props = PageProps<'/algorithms/[id]'>;
 
@@ -18,8 +19,10 @@ async function AlgorithmRoute({ params }: Pick<Props, 'params'>) {
 export default function AlgorithmPage({ params }: Props) {
   // The id is known only per request; the column's placeholder ships in the static shell.
   return (
-    <Suspense fallback={<WorkbenchFallback />}>
-      <AlgorithmRoute params={params} />
-    </Suspense>
+    <PageTransition>
+      <Suspense fallback={<WorkbenchFallback />}>
+        <AlgorithmRoute params={params} />
+      </Suspense>
+    </PageTransition>
   );
 }

@@ -21,6 +21,7 @@ export function AppShell({ sidebar, children }: { sidebar: ReactNode; children: 
       <TopProgressBar active={inFlight} />
       <Header menuButtonRef={menuButtonRef} />
       <SidebarFrame sidebar={sidebar} menuButtonRef={menuButtonRef} />
+      {/* px-safe clears the notch in landscape; from lg the sidebar padding replaces its left side. */}
       <main
         inert={state.mobileOpen}
         className="flex min-w-0 flex-1 flex-col px-safe pt-header-safe pb-safe transition-padding motion-reduce:transition-none lg:pl-sidebar lg:sidebar-collapsed:pl-0"

@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createQueryClient } from '@/data/cache';
 import { startCooldown } from '@/features/workbench';
+import { stubMatchMedia } from '@/test/match-media';
 import { apiUrl, server } from '@/test/msw/server';
 import { CompareHash } from './CompareHash';
 
@@ -156,5 +157,25 @@ describe('CompareHash', () => {
     await user.click(screen.getByRole('button', { name: 'Compare' }));
     await screen.findByText("Couldn't generate the hash", title);
     await waitFor(() => expect(signals.slow?.aborted).toBe(true));
+  });
+
+  it('scrolls a focused text into view on a touch screen, so Compare and the verdict stay visible', async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    stubMatchMedia({ '(pointer: coarse)': true });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    renderCompare();
+
+    const textB = screen.getByRole('textbox', { name: 'Text B' });
+    act(() => textB.focus());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000);
+    });
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView.mock.contexts[0]).toBe(textB);
+
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    delete (Element.prototype as Partial<Element>).scrollIntoView;
   });
 });

@@ -23,6 +23,7 @@ import {
   InlineMessage,
   pageColumn,
   TextArea,
+  useKeepFieldInView,
 } from '@/ui';
 
 type Outcome =
@@ -42,6 +43,7 @@ const fade = {
 export function CompareHash() {
   const client = useQueryClient();
   const cooling = useCooling();
+  const keepFieldInView = useKeepFieldInView();
   const [a, setA] = useState('');
   const [b, setB] = useState('');
   const [outcome, setOutcome] = useState<Outcome>({ kind: 'idle' });
@@ -99,7 +101,7 @@ export function CompareHash() {
   const announcement = verdict ?? failure?.title ?? '';
 
   return (
-    <div className={pageColumn}>
+    <div className={pageColumn} onFocus={keepFieldInView}>
       <h1 className="mt-1 text-large-title text-label">{compareHash.title}</h1>
       <p className="mt-3 max-w-prose text-body text-label-secondary">{compareHash.description}</p>
 

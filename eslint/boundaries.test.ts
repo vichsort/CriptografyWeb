@@ -1,8 +1,14 @@
 // @vitest-environment node
 import { ESLint } from 'eslint';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 const eslint = new ESLint();
+
+// The first lint loads the config, parser and plugins. Pay that once here, with room to spare,
+// instead of inside the first case's 5s budget, which a busy full run can overrun.
+beforeAll(async () => {
+  await eslint.lintText('export {};', { filePath: 'src/domain/warmup.ts' });
+}, 60_000);
 
 async function ruleIds(code: string, filePath: string): Promise<string[]> {
   const [result] = await eslint.lintText(code, { filePath });
